@@ -1,5 +1,8 @@
 # FlutterHomie
 
+[![works with MQTT Homie](https://homieiot.github.io/img/works-with-homie.png "[works with MQTT Homie")](https://homieiot.github.io/)
+
+
 A Flutter project creating a App to discover and manage HomieDevices.
 I started this project to learn creating a app with Flutter thats somewhat usefull to me and maybe others. 
 
@@ -9,5 +12,5 @@ It took my quite some time to get a somehow working MQTT Provider/Connection and
 implementation. Any input for that and other improvements are welcomed!
 
 ## Dev Notes
-To Generated Auto-Gen freeted files:
+To Generated Auto-Gen freezed files:\
 flutter pub run build_runner build
