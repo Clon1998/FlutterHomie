@@ -1,19 +1,13 @@
-# flutter_homie
+# FlutterHomie
 
-A new Flutter project.
+A Flutter project creating a App to discover and manage HomieDevices.
+I started this project to learn creating a app with Flutter thats somewhat usefull to me and maybe others. 
 
-## Getting Started
+Since this is my first ever written mobile App I experiment with different patterns and flutter-packages.
 
-This project is a starting point for a Flutter application.
+It took my quite some time to get a somehow working MQTT Provider/Connection and I am still not satisfied with the current
+implementation. Any input for that and other improvements are welcomed!
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
-
-
+## Dev Notes
+To Generated Auto-Gen freeted files:
 flutter pub run build_runner build
