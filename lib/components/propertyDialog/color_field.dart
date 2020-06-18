@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_homie/bloc/bloc.dart';
 import 'package:flutter_homie/components/propertyDialog/string_field.dart';
+import 'package:flutter_homie/exception/homie_exception.dart';
 import 'package:flutter_homie/homie/property/property_model.dart';
 
 class ColorField extends StatelessWidget {
@@ -23,7 +24,7 @@ class ColorField extends StatelessWidget {
 
     return BlocBuilder<ValidationDialogBloc, ValidationDialogState>(
       builder: (context, validationState) {
-        var isRGB = propertyModel.format == 'rgb';
+        var isRGB = propertyModel.format.fold((HomieException e) => throw e, (val) => val == 'rgb');
         Color pickerColor = Color(0xFFFFFFFF);
         if (propertyModel.currentValue.hasValue) {
           var colorTriple = propertyModel.currentValue.value.split(',');

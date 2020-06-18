@@ -27,17 +27,20 @@ class MqttDataProvider {
   Map<String, BehaviorSubject<dynamic>> dynamicSubMap = Map();
   Map<String, MqttClientTopicFilter> dynamicFilterMap = Map();
 
+  List<Function> listOfCb = List();
+
   Map<String, _Helper> helperMaps = Map();
 
   MqttDataProvider();
 
-  void checkConnection() {
+  HomieException checkConnection() {
     if (client == null) {
-      throw HomieException.mqttNotFound(client);
+      return HomieException.mqttNotFound(client);
     }
     if (client.connectionStatus.state != MqttConnectionState.connected) {
-      throw HomieException.mqttConnectionError(client.connectionStatus.state);
+      return HomieException.mqttConnectionError(client.connectionStatus.state);
     }
+    return null;
   }
 
   Future<Stream<DeviceDiscoverModel>> getDiscoveryResult() async {
@@ -55,8 +58,11 @@ class MqttDataProvider {
     return helps.subject.stream;
   }
 
-  Future<String> getDeviceAttribute(String deviceId, String attribute) async {
-    checkConnection();
+  Future<Either<HomieException, String>> getDeviceAttribute(String deviceId, String attribute) async {
+    HomieException cCon = checkConnection();
+    if (cCon != null) {
+      return Left(cCon);
+    }
 
     String key = '$deviceId-$attribute';
     //ToDo::: close_sinks
@@ -70,9 +76,9 @@ class MqttDataProvider {
       return subject;
     });
     if (attributeSubject.hasValue)
-      return attributeSubject.value;
+      return Right(attributeSubject.value);
     else
-      return attributeSubject.first;
+      return Right(await attributeSubject.first);
   }
 
   Future<Stream<String>> getDynamicDeviceAttribute(String deviceId, String attribute) async {
@@ -93,12 +99,13 @@ class MqttDataProvider {
     return attributeStream.stream;
   }
 
-  Future<String> getNodeAttribute(String deviceId, String nodeId, String attribute) async {
-    return await getDeviceAttribute(deviceId, '$nodeId/$attribute');
+  Future<Either<HomieException, String>> getNodeAttribute(String deviceId, String nodeId, String attribute) {
+    return getDeviceAttribute(deviceId, '$nodeId/$attribute');
   }
 
-  Future<String> getPropertyAttribute(String deviceId, String nodeId, String propertyId, String attribute) async {
-    return await getNodeAttribute(deviceId, nodeId, '$propertyId/$attribute');
+  Future<Either<HomieException, String>> getPropertyAttribute(
+      String deviceId, String nodeId, String propertyId, String attribute) {
+    return getNodeAttribute(deviceId, nodeId, '$propertyId/$attribute');
   }
 
   Future<BehaviorSubject<String>> getPropertyValue(String deviceId, String nodeId, String propertyId,
@@ -139,7 +146,7 @@ class MqttDataProvider {
     return attributeStream.stream.map((val) => StatModel(statId: statId, value: val));
   }
 
-  Future<DeviceModel> getDeviceModel(String deviceId) async {
+  Future<Either<HomieException, DeviceModel>> getDeviceModel(String deviceId) async {
     checkConnection();
     var nameF = getDeviceAttribute(deviceId, '\$name');
     var macF = getDeviceAttribute(deviceId, '\$mac');
@@ -148,50 +155,86 @@ class MqttDataProvider {
     var statsF = getDeviceAttribute(deviceId, '\$stats');
     var homieF = getDeviceAttribute(deviceId, '\$homie');
 
-    var nodes = (await nodesF).split(',');
-    List<Future<NodeModel>> nodeModelsF = nodes.map((nodeId) {
-      return getNodeModel(deviceId, nodeId);
-    }).toList();
+    try {
+      List<String> nodes = (await nodesF).fold((HomieException exception) {
+        throw exception;
+      }, (nodes) => nodes.split(','));
 
-    var name = await nameF;
-    var mac = await macF;
-    var localip = await localipF;
-    var stats = (await statsF).split(',');
-    var homie = await homieF;
-    List<NodeModel> nodeModels = await Future.wait(nodeModelsF);
+      List<Future<Either<HomieException, NodeModel>>> nodeModelsF = nodes.map((nodeId) {
+        return getNodeModel(deviceId, nodeId);
+      }).toList();
 
-    return DeviceModel(
-        name: name,
-        nodes: nodes,
-        nodeModels: nodeModels,
-        homie: homie,
-        mac: mac,
-        localIp: localip,
-        deviceId: deviceId,
-        stats: stats);
+      var name = (await nameF).fold((HomieException exception) {
+        throw exception;
+      }, (value) => value);
+      var mac = (await macF).fold((HomieException exception) {
+        throw exception;
+      }, (value) => value);
+      var localip = (await localipF).fold((HomieException exception) {
+        throw exception;
+      }, (value) => value);
+      var stats = (await statsF).fold((HomieException exception) {
+        throw exception;
+      }, (value) => value.split(','));
+      var homie = (await homieF).fold((HomieException exception) {
+        throw exception;
+      }, (value) => value);
+
+      List<NodeModel> nodeModels = (await Future.wait(nodeModelsF))
+          .map((either) => either.fold((HomieException exception) => throw exception, (model) => model)).toList();
+      return Right(DeviceModel(
+          name: name,
+          nodes: nodes,
+          nodeModels: nodeModels,
+          homie: homie,
+          mac: mac,
+          localIp: localip,
+          deviceId: deviceId,
+          stats: stats));
+    } on HomieException catch (e) {
+      return Left(e);
+    }
   }
 
-  Future<NodeModel> getNodeModel(String deviceId, String nodeId) async {
+  Future<Either<HomieException, NodeModel>> getNodeModel(String deviceId, String nodeId) async {
     checkConnection();
     var nameF = getNodeAttribute(deviceId, nodeId, '\$name');
     var typeF = getNodeAttribute(deviceId, nodeId, '\$type');
     var propertiesF = getNodeAttribute(deviceId, nodeId, '\$properties');
+    try {
+      var properties = (await propertiesF).fold((HomieException exception) {
+        throw exception;
+      }, (nodes) {
+        return nodes.split(',');
+      });
 
-    var properties = (await propertiesF).split(',');
-    List<Future<PropertyModel>> propertyModelsF = properties.map((propertyId) {
-      return getPropertyModel(deviceId, nodeId, propertyId);
-    }).toList();
+      List<Future<Either<HomieException, PropertyModel>>> propertyModelsF = properties.map((propertyId) {
+        return getPropertyModel(deviceId, nodeId, propertyId);
+      }).toList();
 
-    var name = await nameF;
-    var type = await typeF;
-    List<PropertyModel> propertyModels = await Future.wait(propertyModelsF);
+      var name = (await nameF).fold((HomieException exception) {
+        throw exception;
+      }, (value) => value);
+      var type = (await typeF).fold((HomieException exception) {
+        throw exception;
+      }, (value) => value);
 
-    return NodeModel(
-        deviceId: deviceId, nodeId: nodeId, name: name, type: type, properties: properties, propertyModels: propertyModels);
+      List<PropertyModel> propertyModels = (await Future.wait(propertyModelsF))
+          .map((Either<HomieException, PropertyModel> either) => either.fold((HomieException exception) => throw exception, (model) => model)).toList();
+
+      return Right(NodeModel(
+          deviceId: deviceId, nodeId: nodeId, name: name, type: type, properties: properties, propertyModels: propertyModels));
+    } on HomieException catch (e) {
+      return Left(e);
+    }
   }
 
-  Future<PropertyModel> getPropertyModel(String deviceId, String nodeId, String propertyId) async {
-    checkConnection();
+  Future<Either<HomieException, PropertyModel>> getPropertyModel(String deviceId, String nodeId, String propertyId) async {
+    HomieException cCon = checkConnection();
+    if (cCon != null) {
+      return Left(cCon);
+    }
+
     //ToDO: This is horrible, to do it like this! Since some Attr are optional!
     var nameF = getPropertyAttribute(deviceId, nodeId, propertyId, '\$name');
     var datatypeF = getPropertyAttribute(deviceId, nodeId, propertyId, '\$datatype');
@@ -200,29 +243,44 @@ class MqttDataProvider {
     var currentValueF = getPropertyValue(deviceId, nodeId, propertyId);
     var expectedValueF = getPropertyValue(deviceId, nodeId, propertyId, true);
 
-    Future<String> unit = getPropertyAttribute(deviceId, nodeId, propertyId, '\$unit');
-    Future<String> format = getPropertyAttribute(deviceId, nodeId, propertyId, '\$format');
+    Future<Either<HomieException, String>> unit = getPropertyAttribute(deviceId, nodeId, propertyId, '\$unit');
+    Future<Either<HomieException, String>> format = getPropertyAttribute(deviceId, nodeId, propertyId, '\$format');
+    try {
+      var name = (await nameF).fold((HomieException exception) {
+        throw exception;
+      }, (value) => value);
 
-    var name = await nameF;
-    PropertyDataType type = PropertyDataTypeDecorated.fromString(await datatypeF);
-    bool settable = await settableF == 'true';
-    bool retained = await retainedF == 'true';
-    Stream<String> currentValue = await currentValueF;
-    Stream<String> expectedValue = await expectedValueF;
+      PropertyDataType type = (await datatypeF).fold((HomieException exception) {
+        throw exception;
+      }, PropertyDataTypeDecorated.fromString);
 
-    return PropertyModel(
-      deviceId: deviceId,
-      nodeId: nodeId,
-      propertyId: propertyId,
-      name: name,
-      datatype: type,
-      settable: settable,
-      retained: retained,
-      unit: unit,
-      format: format,
-      currentValue: currentValue,
-      expectedValue: expectedValue,
-    );
+      bool settable = (await settableF).fold((HomieException exception) {
+        throw exception;
+      }, (value) => value == 'true');
+
+      bool retained = (await retainedF).fold((HomieException exception) {
+        throw exception;
+      }, (value) => value == 'true');
+
+      Stream<String> currentValue = await currentValueF;
+      Stream<String> expectedValue = await expectedValueF;
+
+      return Right(PropertyModel(
+        deviceId: deviceId,
+        nodeId: nodeId,
+        propertyId: propertyId,
+        name: name,
+        datatype: type,
+        settable: settable,
+        retained: retained,
+        unit: unit,
+        format: format,
+        currentValue: currentValue,
+        expectedValue: expectedValue,
+      ));
+    } on HomieException catch (e) {
+      return Left(e);
+    }
   }
 
   void setPropertyValue({String deviceId, String nodeId, String propertyId, PropertyModel propertyModel, String value}) {
@@ -255,10 +313,9 @@ class MqttDataProvider {
       _prepareConnect(settingsModel.mqttClientId);
       MqttClientConnectionStatus result = await client.connect();
       return Right(result);
-    } on SocketException catch(f) {
+    } on SocketException catch (f) {
       return Left(HomieException.mqttConnectionError(f));
     }
-
   }
 
   void _prepareConnect(String ident) {
@@ -281,6 +338,9 @@ class MqttDataProvider {
   void _onDisconnected() {
     print('[MQTT client] _onDisconnected');
     print('[MQTT client] MQTT client disconnected');
+
+    listOfCb.forEach((cb) => cb());
+
 //    dynamicFilterMap.values.forEach((element) async {
 //      await element.updates.drain();
 //    });
@@ -290,6 +350,10 @@ class MqttDataProvider {
 //    dynamicSubMap.clear();
 //    dynamicFilterMap.clear();
 //    behaviorSubject?.close();
+  }
+
+  void onDisconnect(void callback()) {
+    listOfCb.add(callback);
   }
 
   void _onConnected() {

@@ -2,13 +2,15 @@ import 'dart:async';
 
 import 'package:dartz/dartz.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_homie/bloc/bloc.dart';
+import 'package:flutter_homie/bloc/mqtt_settings_bloc.dart';
 import 'package:flutter_homie/data/model/settings_model.dart';
 import 'package:flutter_homie/data/mqtt_data_provider.dart';
 import 'package:flutter_homie/dependency_injection.dart';
 import 'package:flutter_homie/exception/homie_exception.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:mqtt_client/mqtt_client.dart';
+
+import 'mqtt_setting.dart';
 
 part 'homie_connection.freezed.dart';
 
@@ -21,6 +23,8 @@ abstract class HomieConnectionState with _$HomieConnectionState {
   const factory HomieConnectionState.failure(HomieException exception) = HomieConnectionStateFailure;
 
   const factory HomieConnectionState.active() = HomieConnectionStateActive;
+
+  const factory HomieConnectionState.disconnected() = HomieConnectionStateClose;
 }
 
 @freezed
@@ -38,11 +42,19 @@ class HomieConnectionBloc extends Bloc<HomieConnectionEvent, HomieConnectionStat
   StreamSubscription<MqttSettingsState> streamSubscription;
 
   HomieConnectionBloc([MqttDataProvider mqttDataProvider]) : _mqttDataProvider = mqttDataProvider ?? getIt<MqttDataProvider>() {
+
+    _mqttDataProvider.onDisconnect(_onClientDisconnect);
+
     streamSubscription = getIt<MqttSettingsBloc>().listen((settingsState) {
-      if (settingsState is MqttSettingsCurrent) {
-        this.add(HomieConnectionEvent.open(settingsState.settingsModel));
-      }
+      settingsState.maybeWhen(orElse: () => null,
+      available: (SettingsModel model) {
+        add(HomieConnectionEvent.open(model));
+      });
     });
+  }
+
+  void _onClientDisconnect() {
+//    add(HomieConnectionEvent.close());
   }
 
   @override
@@ -62,16 +74,21 @@ class HomieConnectionBloc extends Bloc<HomieConnectionEvent, HomieConnectionStat
     Either<HomieException, MqttClientConnectionStatus> mqttClientConnectionStatus =
         await _mqttDataProvider.tryConnect(settingsModel);
 
-    yield* mqttClientConnectionStatus.fold((HomieException exception) async* {
-      yield HomieConnectionState.failure(exception);
-    }, (status) async* {
-      yield HomieConnectionState.active();
+    yield mqttClientConnectionStatus.fold((HomieException exception) {
+      return HomieConnectionState.failure(exception);
+    }, (status) {
+      return HomieConnectionState.active();
     });
   }
 
+  Stream<HomieConnectionState> _close() async* {
+    yield HomieConnectionState.disconnected();
+  }
+
+
   @override
   Stream<HomieConnectionState> mapEventToState(HomieConnectionEvent event) {
-    return event.when(ping: _ping, open: _open, close: () => null);
+    return event.when(ping: _ping, open: _open, close: _close);
   }
 
   @override

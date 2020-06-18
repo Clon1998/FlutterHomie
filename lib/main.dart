@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_homie/bloc/bloc.dart';
+import 'package:flutter_homie/bloc/mqtt_settings_bloc.dart';
 import 'package:flutter_homie/dependency_injection.dart';
 import 'package:flutter_homie/dev.dart';
 import 'package:flutter_homie/screens/deviceDiscovery/device_discovery_screen.dart';

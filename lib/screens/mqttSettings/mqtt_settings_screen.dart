@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
-import 'package:flutter_homie/bloc/bloc.dart';
+import 'package:flutter_homie/bloc/mqtt_setting.dart';
+import 'package:flutter_homie/bloc/mqtt_settings_bloc.dart';
 import 'package:flutter_homie/data/model/settings_model.dart';
-import 'package:flutter_homie/homie/stat/stat_model.dart';
 
 import '../../dependency_injection.dart';
 
@@ -28,7 +28,7 @@ class MqttSettingsScreen extends StatelessWidget {
               onPressed: () {
                 var _fbKey = getIt<MqttSettingsBloc>().formKey;
                 if (_fbKey.currentState.saveAndValidate()) {
-                  getIt<MqttSettingsBloc>().add(MqttSettingsUpdated(SettingsModel.fromJson(_fbKey.currentState.value)));
+                  getIt<MqttSettingsBloc>().add(MqttSettingsEvent.retrieved(SettingsModel.fromJson(_fbKey.currentState.value)));
                   Navigator.of(context).pop();
                 }
               },
@@ -52,7 +52,7 @@ class MqttSettingsScreen extends StatelessWidget {
                       Flexible(
                         flex: 3,
                         child: FormBuilderTextField(
-                          initialValue: (state is MqttSettingsCurrent)? state.settingsModel.mqttIp:'127.0.0.1',
+                          initialValue: state.maybeWhen(orElse: () => '127.0.0.1', available: (model) => model.mqttIp),
                           attribute: 'baseUrl',
                           decoration: _decoration.copyWith(labelText: 'MQTT url'),
                           keyboardType: TextInputType.url,
@@ -70,7 +70,7 @@ class MqttSettingsScreen extends StatelessWidget {
                         child: FormBuilderTextField(
                           attribute: 'port',
                           decoration: _decoration.copyWith(labelText: 'Port'),
-                          initialValue: (state is MqttSettingsCurrent)? state.settingsModel.mqttPort.toString():'1883',
+                          initialValue:  state.maybeWhen(orElse: () => '1883', available: (model) => model.mqttPort.toString()),
                           maxLines: 1,
                           keyboardType: TextInputType.number,
                           validators: [
@@ -90,7 +90,7 @@ class MqttSettingsScreen extends StatelessWidget {
                 ),
                 ListTile(
                   title: FormBuilderTextField(
-                    initialValue: (state is MqttSettingsCurrent)? state.settingsModel.mqttClientId:'Homie-Device-Discovery-App',
+                    initialValue: state.maybeWhen(orElse: () => 'Homie-Device-Discovery-App', available: (model) => model.mqttClientId),
                     attribute: 'clientID',
                     decoration: _decoration.copyWith(labelText: 'MQTT ClientID'),
                     keyboardType: TextInputType.text,

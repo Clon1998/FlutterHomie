@@ -1,4 +1,6 @@
+import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter_homie/exception/homie_exception.dart';
 import 'package:rxdart/rxdart.dart';
 
 enum PropertyDataType { integer, float, boolean, string, enumeration, color }
@@ -24,20 +26,20 @@ class PropertyModel extends Equatable {
       this.datatype,
       this.settable,
       this.retained,
-      Future<String> format,
-      Future<String> unit,
+      Future<Either<HomieException, String>> format,
+      Future<Either<HomieException, String>> unit,
       this.currentValue,
       this.expectedValue})
       : _formatWrapped = _Wrapper(format),
         _unitWrapped = _Wrapper(unit);
 
-  String get format => _formatWrapped.latestValue;
+  Either<HomieException, String> get format => _formatWrapped.latestValue;
 
-  Future<String> get formatFuture => _formatWrapped._future;
+  Future<Either<HomieException, String>> get formatFuture => _formatWrapped._future;
 
-  String get unit => _unitWrapped.latestValue;
+  Either<HomieException, String> get unit => _unitWrapped.latestValue;
 
-  Future<String> get unitFuture => _unitWrapped._future;
+  Future<Either<HomieException, String>> get unitFuture => _unitWrapped._future;
 
   @override
   List<Object> get props =>
@@ -45,10 +47,10 @@ class PropertyModel extends Equatable {
 }
 
 class _Wrapper<T> {
-  final Future<T> _future;
-  T latestValue;
+  final Future<Either<HomieException, T>> _future;
+  Either<HomieException, T> latestValue;
 
   _Wrapper(this._future) {
-    _future.then((value) => this.latestValue = value);
+    _future.then((either) => this.latestValue = either);
   }
 }

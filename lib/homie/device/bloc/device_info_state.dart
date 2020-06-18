@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:flutter_homie/exception/homie_exception.dart';
 
 import '../device_model.dart';
 
@@ -21,4 +22,13 @@ class DeviceInfoResult extends DeviceInfoState {
 
   @override
   List<Object> get props => [deviceModel, deviceState];
+}
+
+class DeviceInfoFailure extends DeviceInfoState {
+  final HomieException homieException;
+
+  DeviceInfoFailure(this.homieException);
+
+  @override
+  List<Object> get props => [homieException];
 }

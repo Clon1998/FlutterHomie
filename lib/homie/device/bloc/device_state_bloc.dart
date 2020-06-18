@@ -4,7 +4,6 @@ import 'package:bloc/bloc.dart';
 import 'package:flutter_homie/data/mqtt_data_provider.dart';
 import 'package:flutter_homie/dependency_injection.dart';
 import 'package:flutter_homie/homie/device/device_state_extension.dart';
-import 'package:flutter_homie/homie/device/device_discover_model.dart';
 
 import './bloc.dart';
 

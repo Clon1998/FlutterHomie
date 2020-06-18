@@ -1,28 +1,27 @@
-import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_homie/bloc/bloc.dart';
 import 'package:flutter_homie/bloc/homie_connection.dart';
+import 'package:flutter_homie/bloc/mqtt_setting.dart';
+import 'package:flutter_homie/bloc/mqtt_settings_bloc.dart';
 import 'package:flutter_homie/components/snack_bar_helpers.dart';
 import 'package:flutter_homie/dependency_injection.dart';
 import 'package:flutter_homie/exception/homie_exception.dart';
 import 'package:flutter_homie/homie/device/bloc/bloc.dart';
 import 'package:flutter_homie/homie/device/device_discover_model.dart';
 import 'package:flutter_homie/screens/mqttSettings/mqtt_settings_screen.dart';
+import 'package:loading_indicator/loading_indicator.dart';
 
 import 'components/device_grid_tile.dart';
-import 'package:loading_indicator/loading_indicator.dart';
 
 class DeviceDiscoveryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<HomieConnectionBloc, HomieConnectionState>(
       bloc: getIt<HomieConnectionBloc>(),
-      listener: (context, state) =>
-          state.maybeWhen(
-              orElse: () => {},
-              failure: (HomieException e) => SnackBarHelpers.showErrorSnackBar(context, e.toString(), title: 'Connection Error')),
+      listener: (context, state) => state.maybeWhen(
+          orElse: () => {},
+          failure: (HomieException e) => SnackBarHelpers.showErrorSnackBar(context, e.toString(), title: 'Connection Error')),
       builder: (context, connectionState) {
         return BlocBuilder<MqttSettingsBloc, MqttSettingsState>(builder: (context, settingsState) {
           return BlocProvider<DiscoverDeviceBloc>(
@@ -37,6 +36,7 @@ class DeviceDiscoveryScreen extends StatelessWidget {
                     Icons.brightness_1,
                     size: 12,
                     color: connectionState.when(
+                        disconnected: () => Colors.red,
                         initial: () => Colors.lightBlueAccent,
                         loading: () => Colors.yellow,
                         failure: (e) => Colors.red,
@@ -77,13 +77,12 @@ class DeviceDiscoveryScreen extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: <Widget>[
-                    connectionState.maybeWhen(orElse: () => Container(),
-                      active: () => Text('Mqtt connection established',style: TextStyle(color: Colors.lightGreen)),
+                    connectionState.maybeWhen(
+                      orElse: () => Container(),
+                      active: () => Text('Mqtt connection established', style: TextStyle(color: Colors.lightGreen)),
                       loading: () => Text('Trying to connect'),
-                      failure: (e) => Text('Error opening Mqtt connection',style: TextStyle(color: Colors.deepOrangeAccent)),
+                      failure: (e) => Text('Error opening Mqtt connection', style: TextStyle(color: Colors.deepOrangeAccent)),
                     ),
-
-
                     BlocBuilder<DiscoverDeviceBloc, DeviceDiscoveryState>(builder: (context, state) {
                       if (state is DeviceDiscoveryResult) {
                         return Column(
@@ -94,10 +93,7 @@ class DeviceDiscoveryScreen extends StatelessWidget {
                             ),
                             Text(
                               '${state.devices.length} Devices discovered',
-                              style: Theme
-                                  .of(context)
-                                  .textTheme
-                                  .headline4,
+                              style: Theme.of(context).textTheme.headline4,
                             )
                           ],
                         );
@@ -111,10 +107,7 @@ class DeviceDiscoveryScreen extends StatelessWidget {
                             ),
                             Text(
                               '${state.devices.length} Devices discovered',
-                              style: Theme
-                                  .of(context)
-                                  .textTheme
-                                  .headline4,
+                              style: Theme.of(context).textTheme.headline4,
                             )
                           ],
                         );
@@ -168,5 +161,3 @@ class DeviceDiscoveryScreen extends StatelessWidget {
             }).toList()));
   }
 }
-
-

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_homie/bloc/bloc.dart';
+import 'package:flutter_homie/exception/homie_exception.dart';
 import 'package:flutter_homie/homie/property/property_model.dart';
 
 class FloatField extends StatelessWidget {
@@ -18,7 +19,9 @@ class FloatField extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<ValidationDialogBloc, ValidationDialogState>(builder: (context, validationState) {
       if (propertyModel.format != null) {
-        var formatBorders = propertyModel.format.split(':').map((e) => double.tryParse(e)).toList();
+        //ToDo: Do something useful with the Exception
+        var formatBorders = propertyModel.format.fold((HomieException e) => throw e, (r) => r.split(':').map((e) => double.tryParse(e)).toList());
+
         var divs = (formatBorders[1]-formatBorders[0]).round();
         if (divs == 1){
           divs = 100;

@@ -1,12 +1,13 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
+import 'package:dartz/dartz.dart';
 import 'package:flutter_homie/bloc/bloc.dart';
 import 'package:flutter_homie/data/mqtt_data_provider.dart';
 import 'package:flutter_homie/dependency_injection.dart';
+import 'package:flutter_homie/exception/homie_exception.dart';
 import 'package:flutter_homie/homie/property/property_model.dart';
 import 'package:flutter_homie/homie/property/property_validation_error.dart';
-import 'package:flutter_homie/homie/device/device_discover_model.dart';
 
 import './bloc.dart';
 
@@ -94,30 +95,41 @@ class PropertyValueBloc extends Bloc<PropertyValueEvent, PropertyValueState> {
         if (value.isEmpty) return PropertyValidationError.empty;
         var num = int.tryParse(value);
         if (num == null) return PropertyValidationError.notNumeric;
-        String format = propertyModel.format;
-        var borders = format?.split(':');
-        if (borders != null && borders.length == 2) {
-          var min = int.tryParse(borders[0]);
-          var max = int.tryParse(borders[1]);
+        Either<HomieException, String> format = propertyModel.format;
 
-          if (min != null && num < min) return PropertyValidationError.toSmall;
-          if (max != null && num > max) return PropertyValidationError.toBig;
-        }
+        PropertyValidationError error = format?.fold((l) => null, (format){
+          var borders = format?.split(':');
+          if (borders != null && borders.length == 2) {
+            var min = int.tryParse(borders[0]);
+            var max = int.tryParse(borders[1]);
+
+            if (min != null && num < min) return PropertyValidationError.toSmall;
+            if (max != null && num > max) return PropertyValidationError.toBig;
+          }
+          return null;
+        });
+        if (error != null)
+          return error;
         break;
       case PropertyDataType.float:
         if (value.isEmpty) return PropertyValidationError.empty;
         var num = double.tryParse(value);
         if (num == null) return PropertyValidationError.notFloating;
+        Either<HomieException, String> format = propertyModel.format;
 
-        String format = propertyModel.format;
-        var borders = format?.split(':');
-        if (borders != null && borders.length == 2) {
-          var min = double.tryParse(borders[0]);
-          var max = double.tryParse(borders[1]);
+        PropertyValidationError error = format?.fold((HomieException e) => throw e, (format){
+          var borders = format?.split(':');
+          if (borders != null && borders.length == 2) {
+            var min = double.tryParse(borders[0]);
+            var max = double.tryParse(borders[1]);
 
-          if (min != null && num < min) return PropertyValidationError.toSmall;
-          if (max != null && num > max) return PropertyValidationError.toBig;
-        }
+            if (min != null && num < min) return PropertyValidationError.toSmall;
+            if (max != null && num > max) return PropertyValidationError.toBig;
+          }
+          return null;
+        });
+        if (error != null)
+          return error;
 
         break;
       case PropertyDataType.boolean:
@@ -132,7 +144,7 @@ class PropertyValueBloc extends Bloc<PropertyValueEvent, PropertyValueState> {
         break;
       case PropertyDataType.color:
         if (propertyModel.format == null) return PropertyValidationError.general;
-        var isRGB = propertyModel.format == 'rgb';
+        var isRGB = propertyModel.format.fold((HomieException e) => throw e, (val) => val == 'rgb');
         var triple = value.split(',').map(int.tryParse);
         if (triple.length != 3) return PropertyValidationError.general;
         if (isRGB) {

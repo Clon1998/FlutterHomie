@@ -1,9 +1,11 @@
 import 'dart:async';
+
 import 'package:bloc/bloc.dart';
 import 'package:flutter_homie/data/mqtt_data_provider.dart';
 import 'package:flutter_homie/dependency_injection.dart';
+import 'package:flutter_homie/exception/homie_exception.dart';
 import 'package:flutter_homie/homie/device/device_model.dart';
-import 'package:flutter_homie/homie/device/device_discover_model.dart';
+
 import './bloc.dart';
 
 class DeviceInfoBloc extends Bloc<DeviceInfoEvent, DeviceInfoState> {
@@ -31,8 +33,8 @@ class DeviceInfoBloc extends Bloc<DeviceInfoEvent, DeviceInfoState> {
   ) async* {
     if (event is DeviceInfoOpened) {
       yield DeviceInfoLoading();
-      DeviceModel deviceModel = await _mqttDataProvider.getDeviceModel(event.deviceId);
-      yield DeviceInfoResult(deviceModel: deviceModel, deviceState: _deviceStateCurrent);
+      yield (await _mqttDataProvider.getDeviceModel(event.deviceId)).fold(
+          (HomieException e) => DeviceInfoFailure(e), (r) => DeviceInfoResult(deviceModel: r, deviceState: _deviceStateCurrent));
     }
 
     if (event is DeviceInfoRenewed) {
