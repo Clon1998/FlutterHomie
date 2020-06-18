@@ -53,7 +53,11 @@ class DeviceDiscoveryScreen extends StatelessWidget {
                     tooltip: 'Settings',
                   ),
                   BlocBuilder<DiscoverDeviceBloc, DeviceDiscoveryState>(builder: (context, state) {
-                    if (state is DeviceDiscoveryInitial || state is DeviceDiscoveryStop) {
+
+                    state.maybeWhen(initial: () => ,  orElse: null);
+
+
+                    if (state is DeviceDiscoveryStateInitial || state is DeviceDiscoveryStateStop) {
                       return IconButton(
                         icon: Icon(Icons.play_circle_outline),
                         onPressed: (connectionState is HomieConnectionStateActive)
