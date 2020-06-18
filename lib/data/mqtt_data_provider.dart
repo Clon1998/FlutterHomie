@@ -43,8 +43,11 @@ class MqttDataProvider {
     return null;
   }
 
-  Future<Stream<DeviceDiscoverModel>> getDiscoveryResult() async {
-    checkConnection();
+  Future<Either<HomieException,Stream<DeviceDiscoverModel>>> getDiscoveryResult() async {
+    HomieException cCon = checkConnection();
+    if (cCon != null) {
+      return Left(cCon);
+    }
     String key = 'discovery';
 
     _Helper<DeviceDiscoverModel> helps = helperMaps.putIfAbsent(key, () {
@@ -55,7 +58,7 @@ class MqttDataProvider {
       return h;
     });
 
-    return helps.subject.stream;
+    return Right(helps.subject.stream);
   }
 
   Future<Either<HomieException, String>> getDeviceAttribute(String deviceId, String attribute) async {

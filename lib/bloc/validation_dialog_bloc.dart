@@ -1,10 +1,15 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_homie/bloc/bloc.dart';
 import 'package:flutter_homie/homie/property/property_validation_error.dart';
 
 class ValidationDialogBloc extends Bloc<ValidationDialogEvent, ValidationDialogState> {
+
+  final GlobalKey<FormBuilderState> formKey = GlobalKey<FormBuilderState>();
+
   @override
   ValidationDialogState get initialState => ValidationDialogIdle();
 

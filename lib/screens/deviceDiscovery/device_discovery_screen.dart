@@ -53,27 +53,10 @@ class DeviceDiscoveryScreen extends StatelessWidget {
                     tooltip: 'Settings',
                   ),
                   BlocBuilder<DiscoverDeviceBloc, DeviceDiscoveryState>(builder: (context, state) {
-
-                    state.maybeWhen(initial: () => ,  orElse: null);
-
-
-                    if (state is DeviceDiscoveryStateInitial || state is DeviceDiscoveryStateStop) {
-                      return IconButton(
-                        icon: Icon(Icons.play_circle_outline),
-                        onPressed: (connectionState is HomieConnectionStateActive)
-                            ? () => BlocProvider.of<DiscoverDeviceBloc>(context).add(DeviceDiscoveryStarted())
-                            : null,
-                        tooltip: 'Starte discovery',
-                      );
-                    } else {
-                      return IconButton(
-                        icon: Icon(Icons.pause_circle_outline),
-                        onPressed: (connectionState is HomieConnectionStateActive)
-                            ? () => BlocProvider.of<DiscoverDeviceBloc>(context).add(DeviceDiscoveryStopped())
-                            : null,
-                        tooltip: 'Stoppe discovery',
-                      );
-                    }
+                    return state.maybeWhen(
+                        initial: () => startDiscoveryButton(connectionState, context),
+                        stop: (devices) => startDiscoveryButton(connectionState, context),
+                        orElse: () => stopDisoveryButton(connectionState, context));
                   }),
                 ],
               ),
@@ -88,60 +71,48 @@ class DeviceDiscoveryScreen extends StatelessWidget {
                       failure: (e) => Text('Error opening Mqtt connection', style: TextStyle(color: Colors.deepOrangeAccent)),
                     ),
                     BlocBuilder<DiscoverDeviceBloc, DeviceDiscoveryState>(builder: (context, state) {
-                      if (state is DeviceDiscoveryResult) {
-                        return Column(
-                          children: <Widget>[
-                            Text(
-                              'Device discovery running',
-                              style: TextStyle(color: Colors.lightGreen),
-                            ),
-                            Text(
-                              '${state.devices.length} Devices discovered',
-                              style: Theme.of(context).textTheme.headline4,
-                            )
-                          ],
-                        );
-                      }
-                      if (state is DeviceDiscoveryStop) {
-                        return Column(
-                          children: <Widget>[
-                            Text(
-                              'Device discovery stopped',
-                              style: TextStyle(color: Colors.redAccent),
-                            ),
-                            Text(
-                              '${state.devices.length} Devices discovered',
-                              style: Theme.of(context).textTheme.headline4,
-                            )
-                          ],
-                        );
-                      }
-                      if (state is DeviceDiscoveryLoading) {
-                        return Text('Started Device Discovery');
-                      }
-                      return Text('No Devices Discovered yet');
+                      return state.maybeWhen(
+                          orElse: () => Text('No Devices discovered yet. Please start Device disovery'),
+                          active: (result) {
+                            return Column(
+                              children: <Widget>[
+                                Text(
+                                  'Device discovery running',
+                                  style: TextStyle(color: Colors.lightGreen),
+                                ),
+                                Text(
+                                  '${result.length} Devices discovered',
+                                  style: Theme.of(context).textTheme.headline4,
+                                )
+                              ],
+                            );
+                          },
+                          stop: (discoveryResults) {
+                            return Column(
+                              children: <Widget>[
+                                Text(
+                                  'Device discovery stopped',
+                                  style: TextStyle(color: Colors.redAccent),
+                                ),
+                                Text(
+                                  '${discoveryResults.length} Devices discovered',
+                                  style: Theme.of(context).textTheme.headline4,
+                                )
+                              ],
+                            );
+                          },
+                          loading: () => Text('Started Device Discovery'));
                     }),
                     Divider(color: Colors.black),
                     BlocBuilder<DiscoverDeviceBloc, DeviceDiscoveryState>(
                       builder: (context, state) {
-                        if (state is DeviceDiscoveryInitial) {
-                          return Text("Please start Device Discovery");
-                        }
-
-                        if (state is DeviceDiscoveryLoading) {
-                          return LoadingIndicator(
-                            indicatorType: Indicator.pacman,
-                          );
-                        }
-
-                        if (state is DeviceDiscoveryResult) {
-                          return buildGridView(state.devices);
-                        }
-
-                        if (state is DeviceDiscoveryStop) {
-                          return buildGridView(state.devices);
-                        }
-                        return Text('No State found');
+                        return state.maybeWhen(
+                            orElse: () => Text('Please start Device Discovery'),
+                            loading: () => LoadingIndicator(
+                                  indicatorType: Indicator.pacman,
+                                ),
+                            active: buildGridView,
+                            stop: buildGridView,);
                       },
                     )
                   ],
@@ -151,6 +122,26 @@ class DeviceDiscoveryScreen extends StatelessWidget {
           );
         });
       },
+    );
+  }
+
+  IconButton stopDisoveryButton(HomieConnectionState connectionState, BuildContext context) {
+    return IconButton(
+      icon: Icon(Icons.pause_circle_outline),
+      onPressed: (connectionState is HomieConnectionStateActive)
+          ? () => BlocProvider.of<DiscoverDeviceBloc>(context).add(DeviceDiscoveryEvent.stopped())
+          : null,
+      tooltip: 'Stop discovery',
+    );
+  }
+
+  IconButton startDiscoveryButton(HomieConnectionState connectionState, BuildContext context) {
+    return IconButton(
+      icon: Icon(Icons.play_circle_outline),
+      onPressed: (connectionState is HomieConnectionStateActive)
+          ? () => BlocProvider.of<DiscoverDeviceBloc>(context).add(DeviceDiscoveryEvent.started())
+          : null,
+      tooltip: 'Start discovery',
     );
   }
 

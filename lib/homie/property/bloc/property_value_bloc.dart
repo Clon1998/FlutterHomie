@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:bloc/bloc.dart';
 import 'package:dartz/dartz.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_homie/bloc/bloc.dart';
 import 'package:flutter_homie/data/mqtt_data_provider.dart';
 import 'package:flutter_homie/dependency_injection.dart';
@@ -12,8 +14,10 @@ import 'package:flutter_homie/homie/property/property_validation_error.dart';
 import './bloc.dart';
 
 class PropertyValueBloc extends Bloc<PropertyValueEvent, PropertyValueState> {
-  PropertyValueBloc([MqttDataProvider mqttDataProvider]) : _mqttDataProvider = mqttDataProvider ?? getIt<MqttDataProvider>();
   final MqttDataProvider _mqttDataProvider;
+  final GlobalKey<FormBuilderState> formKey = GlobalKey<FormBuilderState>();
+
+  PropertyValueBloc([MqttDataProvider mqttDataProvider]) : _mqttDataProvider = mqttDataProvider ?? getIt<MqttDataProvider>();
 
   String _expected = '0';
   String _actual = '0';

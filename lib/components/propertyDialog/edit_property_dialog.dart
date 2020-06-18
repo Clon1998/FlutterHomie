@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_homie/bloc/bloc.dart';
 import 'package:flutter_homie/components/propertyDialog/boolean_field.dart';
 import 'package:flutter_homie/components/propertyDialog/color_field.dart';
@@ -53,54 +54,39 @@ class EditPropertyDialog extends StatelessWidget {
                   ),
                 ],
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min, // To make the card compact
-                children: <Widget>[
-                  Text(
-                    'Edit Property "${propertyModel.name}"',
-                    style: TextStyle(
-                      fontSize: 24.0,
-                      fontWeight: FontWeight.w700,
+              child: FormBuilder(
+                autovalidate: true,
+                key: propertyValueBloc.formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min, // To make the card compact
+                  children: <Widget>[
+                    Text(
+                      'Edit Property "${propertyModel.name}"',
+                      style: TextStyle(
+                        fontSize: 24.0,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 16.0),
-                  dataTypeField(_textInput, propertyModel),
-                  SizedBox(height: 24.0),
-                  Align(
-                    alignment: Alignment.bottomRight,
-                    child: BlocConsumer<ValidationDialogBloc, ValidationDialogState>(listener: (context, validationState) {
-                      if (validationState is ValidationDialogSuccess) {
-                        Navigator.of(context).pop(); // To close the dialog
-                      }
-                    }, builder: (context, validationState) {
-                      return ProgressButton.icon(
-                        iconedButtons: {
-                          ButtonState.idle: IconedButton(
-                              text: "Set-Value", icon: Icon(Icons.send, color: Colors.white), color: Colors.deepPurple.shade500),
-                          ButtonState.loading: IconedButton(text: "Loading", color: Colors.deepPurple.shade700),
-                          ButtonState.fail: IconedButton(
-                              text: "Failed", icon: Icon(Icons.cancel, color: Colors.white), color: Colors.red.shade300),
-                          ButtonState.success: IconedButton(
-                              text: "Success",
-                              icon: Icon(
-                                Icons.check_circle,
-                                color: Colors.white,
-                              ),
-                              color: Colors.green.shade400)
-                        },
-                        state: validationState.toButtonState,
-                        onPressed: () {
-                          if (validationState is ValidationDialogIdle)
-                            propertyValueBloc.add(PropertyValueUpdated(
-                                validationDialogBloc: BlocProvider.of<ValidationDialogBloc>(context),
-                                propertyModel: propertyModel,
-                                newValue: _textInput.text));
-                          if (validationState is ValidationDialogError) Navigator.of(context).pop();
-                        },
-                      );
-                    }),
-                  ),
-                ],
+                    SizedBox(height: 16.0),
+                    dataTypeField(_textInput, propertyModel),
+                    SizedBox(height: 24.0),
+                    Align(
+                        alignment: Alignment.bottomRight,
+                        child: FlatButton(
+                          onPressed: () {
+                            var _fbKey = propertyValueBloc.formKey;
+                            if (_fbKey.currentState.saveAndValidate()) {
+                              propertyValueBloc.add(PropertyValueUpdated(
+                                  validationDialogBloc: BlocProvider.of<ValidationDialogBloc>(context),
+                                  propertyModel: propertyModel,
+                                  newValue: _textInput.text));
+                              Navigator.of(context).pop();
+                            }
+                          },
+                          child: Text('Submit'),
+                        )),
+                  ],
+                ),
               ),
             )
           ],
@@ -112,7 +98,8 @@ class EditPropertyDialog extends StatelessWidget {
   Widget dataTypeField(TextEditingController _textInput, PropertyModel propertyModel) {
     switch (propertyModel.datatype) {
       case PropertyDataType.integer:
-        return IntegerField(propertyModel: propertyModel, numberInput: _textInput);
+        return IntegerField(propertyModel: propertyModel);
+    /*
 
       case PropertyDataType.color:
         return ColorField(propertyModel: propertyModel, numberInput: _textInput);
@@ -122,10 +109,10 @@ class EditPropertyDialog extends StatelessWidget {
 
       case PropertyDataType.boolean:
         return BooleanField(propertyModel: propertyModel, numberInput: _textInput);
-
+*/
       case PropertyDataType.string:
       default:
-        return StringField(propertyModel: propertyModel, textInput: _textInput);
+        return StringField(propertyModel: propertyModel);
     }
   }
 }

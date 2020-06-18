@@ -20,7 +20,7 @@ class ColorField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (propertyModel.format == null || !['hsv', 'rgb'].contains(propertyModel.format))
-      return StringField(propertyModel: propertyModel, textInput: _numberInput);
+      return StringField(propertyModel: propertyModel);
 
     return BlocBuilder<ValidationDialogBloc, ValidationDialogState>(
       builder: (context, validationState) {

@@ -50,9 +50,13 @@ class DiscoverDeviceBloc extends Bloc<DeviceDiscoveryEvent, DeviceDiscoveryState
     _discoveredDevices.clear();
     _subscription?.cancel();
 
-    var discDeviceStream = await _mqttDataProvider.getDiscoveryResult();
-    _subscription = discDeviceStream.listen((event) {
-      add(DeviceDiscoveryEvent.discovered(event));
+    var either = await _mqttDataProvider.getDiscoveryResult();
+    yield* either.fold((HomieException e) async* {
+      yield DeviceDiscoveryState.failure(e);
+    }, (results) async* {
+      _subscription = results.listen((event) {
+        add(DeviceDiscoveryEvent.discovered(event));
+      });
     });
   }
 
