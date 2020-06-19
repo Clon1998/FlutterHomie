@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_homie/bloc/bloc.dart';
 import 'package:flutter_homie/homie/property/property_model.dart';
 
@@ -16,16 +17,14 @@ class BooleanField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ValidationDialogBloc, ValidationDialogState>(builder: (context, validationState) {
-      return SwitchListTile(
-        title: Text('Change bool Property'),
-        value: (_numberInput.text == 'true'),
-        onChanged: (v) {
-          //ToDo: Rebuild of this Widget is missing/fked up
-          _numberInput.text = v ? 'true' : 'false';
-          BlocProvider.of<ValidationDialogBloc>(context).add(ValidationDialogValueChanged(_numberInput.text));
-        },
-      );
-    });
+    bool currentValue = propertyModel.currentValue.hasValue ? propertyModel.currentValue.value == 'true' : false;
+
+    return FormBuilderSwitch(
+      initialValue: currentValue,
+      attribute: 'newValue',
+      label: Text('Bool-Value'),
+      decoration: InputDecoration(border: const UnderlineInputBorder(), contentPadding: EdgeInsets.all(12.0), labelText: 'Value'),
+      valueTransformer: (v) => v? 'true':'false',
+    );
   }
 }

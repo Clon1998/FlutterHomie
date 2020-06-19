@@ -38,15 +38,13 @@ class PropertySetValueChanged extends PropertyValueEvent {
 //Updated by user
 class PropertyValueUpdated extends PropertyValueEvent {
   final PropertyModel propertyModel;
-  final ValidationDialogBloc validationDialogBloc;
   final String newValue;
 
   PropertyValueUpdated(
       {
       @required this.propertyModel,
-      @required this.newValue,
-      this.validationDialogBloc});
+      @required this.newValue});
 
   @override
-  List<Object> get props => [newValue, propertyModel, validationDialogBloc];
+  List<Object> get props => [newValue, propertyModel];
 }

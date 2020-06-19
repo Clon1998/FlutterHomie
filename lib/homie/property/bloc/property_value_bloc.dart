@@ -77,91 +77,15 @@ class PropertyValueBloc extends Bloc<PropertyValueEvent, PropertyValueState> {
     }
 
     if (event is PropertyValueUpdated) {
-      event.validationDialogBloc?.add(ValidationDialogValidationRequested());
       yield PropertyValueUpdateRequest();
 
       print('Update request: ${event.newValue}');
-      //ToDo: Value Validation with DataType + format
-      var validationError = validateValue(event.propertyModel, event.newValue);
-      if (validationError == null) {
-        _mqttDataProvider.setPropertyValue(value: event.newValue, propertyModel: event.propertyModel);
-        event.validationDialogBloc?.add(ValidationDialogValidationSuccess());
-      } else {
-        event.validationDialogBloc?.add(ValidationDialogValidationFailed(validationError));
-      }
+
+      _mqttDataProvider.setPropertyValue(value: event.newValue, propertyModel: event.propertyModel);
+
     }
   }
 
-  PropertyValidationError validateValue(PropertyModel propertyModel, String value) {
-    if (value == null) return PropertyValidationError.empty;
-    switch (propertyModel.datatype) {
-      case PropertyDataType.integer:
-        if (value.isEmpty) return PropertyValidationError.empty;
-        var num = int.tryParse(value);
-        if (num == null) return PropertyValidationError.notNumeric;
-        Either<HomieException, String> format = propertyModel.format;
-
-        PropertyValidationError error = format?.fold((l) => null, (format){
-          var borders = format?.split(':');
-          if (borders != null && borders.length == 2) {
-            var min = int.tryParse(borders[0]);
-            var max = int.tryParse(borders[1]);
-
-            if (min != null && num < min) return PropertyValidationError.toSmall;
-            if (max != null && num > max) return PropertyValidationError.toBig;
-          }
-          return null;
-        });
-        if (error != null)
-          return error;
-        break;
-      case PropertyDataType.float:
-        if (value.isEmpty) return PropertyValidationError.empty;
-        var num = double.tryParse(value);
-        if (num == null) return PropertyValidationError.notFloating;
-        Either<HomieException, String> format = propertyModel.format;
-
-        PropertyValidationError error = format?.fold((HomieException e) => throw e, (format){
-          var borders = format?.split(':');
-          if (borders != null && borders.length == 2) {
-            var min = double.tryParse(borders[0]);
-            var max = double.tryParse(borders[1]);
-
-            if (min != null && num < min) return PropertyValidationError.toSmall;
-            if (max != null && num > max) return PropertyValidationError.toBig;
-          }
-          return null;
-        });
-        if (error != null)
-          return error;
-
-        break;
-      case PropertyDataType.boolean:
-        if (!['true', 'false'].contains(value)) return PropertyValidationError.noBool;
-        break;
-      case PropertyDataType.string:
-        if (value.length > 0x10000000)
-          return PropertyValidationError.sizeExceeded; //String types are limited to 268,435,456 characters - Homie Impl
-        break;
-      case PropertyDataType.enumeration:
-        return PropertyValidationError.general;
-        break;
-      case PropertyDataType.color:
-        if (propertyModel.format == null) return PropertyValidationError.general;
-        var isRGB = propertyModel.format.fold((HomieException e) => throw e, (val) => val == 'rgb');
-        var triple = value.split(',').map(int.tryParse);
-        if (triple.length != 3) return PropertyValidationError.general;
-        if (isRGB) {
-          if (triple.where((element) => element > 255).isNotEmpty) return PropertyValidationError.wrongRGBFormat;
-        } else {
-          var hsvTriple = triple.toList();
-          if (hsvTriple[0] > 360 || hsvTriple[1] > 100 || hsvTriple[2] > 100) return PropertyValidationError.wrongHSVFormat;
-        }
-
-        break;
-    }
-    return null;
-  }
 
   @override
   Future<void> close() async {
