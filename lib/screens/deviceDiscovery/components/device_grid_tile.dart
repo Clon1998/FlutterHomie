@@ -6,7 +6,6 @@ import 'package:flutter_homie/homie/device/device_state_extension.dart';
 import 'package:flutter_homie/screens/deviceInfo/device_info_screen.dart';
 import 'package:loading_indicator/loading_indicator.dart';
 
-
 class DeviceGridTile extends StatefulWidget {
   final DeviceDiscoverModel deviceDiscoverModel;
 
@@ -17,7 +16,7 @@ class DeviceGridTile extends StatefulWidget {
 }
 
 class _DeviceGridTileState extends State<DeviceGridTile> {
-  final DeviceStateBloc _deviceStateBloc = DeviceStateBloc();
+  final DeviceConnectionStateBloc _deviceStateBloc = DeviceConnectionStateBloc();
 
   @override
   void initState() {
@@ -26,11 +25,11 @@ class _DeviceGridTileState extends State<DeviceGridTile> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<DeviceStateBloc>.value(
-      value: _deviceStateBloc..add(DeviceStateFetchingStarted(deviceId: widget.deviceDiscoverModel.deviceId)),
-      child: BlocBuilder<DeviceStateBloc, DeviceStateState>(
+    return BlocProvider<DeviceConnectionStateBloc>.value(
+      value: _deviceStateBloc..add(DeviceConnectionStateEvent.requested(widget.deviceDiscoverModel.deviceId)),
+      child: BlocBuilder<DeviceConnectionStateBloc, DeviceConnectionState>(
         builder: (context, state) {
-          if (state is DeviceStateInitial) {
+          if (state is DeviceConnectionStateInitial) {
             return Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -38,7 +37,7 @@ class _DeviceGridTileState extends State<DeviceGridTile> {
               ],
             );
           }
-          if (state is DeviceStateCurrent) {
+          if (state is DeviceConnectionStateCurrente) {
             return InkResponse(
               child: Card(
                 elevation: 3.0,

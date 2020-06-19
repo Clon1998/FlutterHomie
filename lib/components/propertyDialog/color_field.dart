@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
-import 'package:flutter_homie/bloc/bloc.dart';
 import 'package:flutter_homie/components/propertyDialog/string_field.dart';
-import 'package:flutter_homie/exception/homie_exception.dart';
 import 'package:flutter_homie/homie/property/property_model.dart';
 
 class ColorField extends StatelessWidget {
@@ -12,19 +8,16 @@ class ColorField extends StatelessWidget {
     Key key,
     @required this.propertyModel,
     @required TextEditingController numberInput,
-  })  : _numberInput = numberInput,
-        super(key: key);
+  }) : super(key: key);
 
   final PropertyModel propertyModel;
-  final TextEditingController _numberInput;
 
   @override
   Widget build(BuildContext context) {
-    if (propertyModel.format == null ||
-        !['hsv', 'rgb'].contains(propertyModel.format.fold((HomieException e) => throw e, (f) => f)))
+    if (propertyModel.format == null || !['hsv', 'rgb'].contains(propertyModel.format))
       return StringField(propertyModel: propertyModel);
 
-    var isRGB = propertyModel.format.fold((HomieException e) => throw e, (val) => val == 'rgb');
+    var isRGB = propertyModel.format == 'rgb';
     Color currentColor = Color(0xFFFFFFFF);
     if (propertyModel.currentValue.hasValue) {
       var colorTriple = propertyModel.currentValue.value.split(',');

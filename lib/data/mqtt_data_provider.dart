@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:dartz/dartz.dart';
+import 'package:flutter_homie/data/homie_data_provider.dart';
 import 'package:flutter_homie/data/model/settings_model.dart';
 import 'package:flutter_homie/exception/homie_exception.dart';
 import 'package:flutter_homie/homie/device/device_discover_model.dart';
@@ -20,7 +21,7 @@ class _Helper<T> {
   _Helper(this.subject, this.topicFilter);
 }
 
-class MqttDataProvider {
+class MqttDataProvider implements HomieDataProvider {
   MqttServerClient client;
   Future<MqttClientConnectionStatus> mqttClientConnectionStatus;
   MqttClientTopicFilter discoveryTopicFilter;
@@ -43,7 +44,7 @@ class MqttDataProvider {
     return null;
   }
 
-  Future<Either<HomieException,Stream<DeviceDiscoverModel>>> getDiscoveryResult() async {
+  Future<Either<HomieException, Stream<DeviceDiscoverModel>>> getDiscoveryResult() async {
     HomieException cCon = checkConnection();
     if (cCon != null) {
       return Left(cCon);
@@ -54,7 +55,7 @@ class MqttDataProvider {
       _Helper<DeviceDiscoverModel> h = _Helper(ReplaySubject<DeviceDiscoverModel>(),
           MqttClientTopicFilter('${DeviceDiscoverModel.deviceDiscoveryTopic}/+/\$name', client.updates));
       h.subject.addStream(h.topicFilter.updates.map((event) => event[0]).map(DeviceDiscoverModel.fromMqtt));
-      client.subscribe(h.topicFilter.topic, MqttQos.atMostOnce);
+      client.subscribe(h.topicFilter.topic, MqttQos.atLeastOnce);
       return h;
     });
 
@@ -75,7 +76,7 @@ class MqttDataProvider {
       var filter = dynamicFilterMap.putIfAbsent(
           key, () => MqttClientTopicFilter('${DeviceDiscoverModel.deviceDiscoveryTopic}/$deviceId/$attribute', client.updates));
       subject.addStream(filter.updates.map(_mqttPacketToPayload));
-      client.subscribe(filter.topic, MqttQos.atMostOnce);
+      client.subscribe(filter.topic, MqttQos.atLeastOnce);
       return subject;
     });
     if (attributeSubject.hasValue)
@@ -84,7 +85,7 @@ class MqttDataProvider {
       return Right(await attributeSubject.first);
   }
 
-  Future<Stream<String>> getDynamicDeviceAttribute(String deviceId, String attribute) async {
+  Future<Stream<String>> getDeviceAttributeAsStream(String deviceId, String attribute) async {
     checkConnection();
 
     String key = '$deviceId-$attribute';
@@ -95,7 +96,7 @@ class MqttDataProvider {
       var filter = dynamicFilterMap.putIfAbsent(
           key, () => MqttClientTopicFilter('${DeviceDiscoverModel.deviceDiscoveryTopic}/$deviceId/$attribute', client.updates));
       subject.addStream(filter.updates.map(_mqttPacketToPayload));
-      client.subscribe(filter.topic, MqttQos.atMostOnce);
+      client.subscribe(filter.topic, MqttQos.atLeastOnce);
       return subject;
     });
 
@@ -111,9 +112,13 @@ class MqttDataProvider {
     return getNodeAttribute(deviceId, nodeId, '$propertyId/$attribute');
   }
 
-  Future<BehaviorSubject<String>> getPropertyValue(String deviceId, String nodeId, String propertyId,
+  Future<Either<HomieException, BehaviorSubject<String>>> getPropertyValue(String deviceId, String nodeId, String propertyId,
       [bool isSetTopic = false]) async {
-    checkConnection();
+    HomieException cCon = checkConnection();
+    if (cCon != null) {
+      return Left(cCon);
+    }
+
     String key = '$deviceId-$nodeId-$propertyId${isSetTopic ? '-avalue' : '-evalue'}'; //Actual Value, Expected Value
     //ToDo::: close_sinks
     // ignore: close_sinks
@@ -125,15 +130,18 @@ class MqttDataProvider {
               '${DeviceDiscoverModel.deviceDiscoveryTopic}/$deviceId/$nodeId/$propertyId${isSetTopic ? '/set' : ''}',
               client.updates));
       subject.addStream(filter.updates.map(_mqttPacketToPayload));
-      client.subscribe(filter.topic, MqttQos.atMostOnce);
+      client.subscribe(filter.topic, MqttQos.atLeastOnce);
       return subject;
     });
 
-    return attributeSubject;
+    return Right(attributeSubject);
   }
 
-  Future<Stream<StatModel>> getDeviceStatValue(String deviceId, String statId) async {
-    checkConnection();
+  Future<Either<HomieException, Stream<StatModel>>> getDeviceStatStream(String deviceId, String statId) async {
+    HomieException cCon = checkConnection();
+    if (cCon != null) {
+      return Left(cCon);
+    }
     String key = '$deviceId-stats-$statId';
     //ToDo::: close_sinks
     // ignore: close_sinks
@@ -142,11 +150,11 @@ class MqttDataProvider {
       var filter = dynamicFilterMap.putIfAbsent(key,
           () => MqttClientTopicFilter('${DeviceDiscoverModel.deviceDiscoveryTopic}/$deviceId/\$stats/$statId', client.updates));
       subject.addStream(filter.updates.map(_mqttPacketToPayload));
-      client.subscribe(filter.topic, MqttQos.atMostOnce);
+      client.subscribe(filter.topic, MqttQos.atLeastOnce);
       return subject;
     });
 
-    return attributeStream.stream.map((val) => StatModel(statId: statId, value: val));
+    return Right(attributeStream.stream.map((val) => StatModel(statId: statId, value: val)));
   }
 
   Future<Either<HomieException, DeviceModel>> getDeviceModel(String deviceId) async {
@@ -184,7 +192,8 @@ class MqttDataProvider {
       }, (value) => value);
 
       List<NodeModel> nodeModels = (await Future.wait(nodeModelsF))
-          .map((either) => either.fold((HomieException exception) => throw exception, (model) => model)).toList();
+          .map((either) => either.fold((HomieException exception) => throw exception, (model) => model))
+          .toList();
       return Right(DeviceModel(
           name: name,
           nodes: nodes,
@@ -223,7 +232,9 @@ class MqttDataProvider {
       }, (value) => value);
 
       List<PropertyModel> propertyModels = (await Future.wait(propertyModelsF))
-          .map((Either<HomieException, PropertyModel> either) => either.fold((HomieException exception) => throw exception, (model) => model)).toList();
+          .map((Either<HomieException, PropertyModel> either) =>
+              either.fold((HomieException exception) => throw exception, (model) => model))
+          .toList();
 
       return Right(NodeModel(
           deviceId: deviceId, nodeId: nodeId, name: name, type: type, properties: properties, propertyModels: propertyModels));
@@ -265,8 +276,12 @@ class MqttDataProvider {
         throw exception;
       }, (value) => value == 'true');
 
-      Stream<String> currentValue = await currentValueF;
-      Stream<String> expectedValue = await expectedValueF;
+      Stream<String> currentValue = (await currentValueF).fold((HomieException exception) {
+        throw exception;
+      }, (value) => value);
+      Stream<String> expectedValue = (await expectedValueF).fold((HomieException exception) {
+        throw exception;
+      }, (value) => value);
 
       return Right(PropertyModel(
         deviceId: deviceId,

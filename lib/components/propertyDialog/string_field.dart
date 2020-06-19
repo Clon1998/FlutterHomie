@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
-import 'package:flutter_homie/bloc/bloc.dart';
 import 'package:flutter_homie/homie/property/property_model.dart';
 
 class StringField extends StatelessWidget {

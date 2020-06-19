@@ -2,15 +2,13 @@ import 'dart:async';
 
 import 'package:dartz/dartz.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_homie/bloc/mqtt_settings_bloc.dart';
+import 'package:flutter_homie/bloc/mqtt_setting.dart';
 import 'package:flutter_homie/data/model/settings_model.dart';
 import 'package:flutter_homie/data/mqtt_data_provider.dart';
 import 'package:flutter_homie/dependency_injection.dart';
 import 'package:flutter_homie/exception/homie_exception.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:mqtt_client/mqtt_client.dart';
-
-import 'mqtt_setting.dart';
 
 part 'homie_connection.freezed.dart';
 

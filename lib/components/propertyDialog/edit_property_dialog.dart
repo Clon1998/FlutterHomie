@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
-import 'package:flutter_homie/bloc/bloc.dart';
 import 'package:flutter_homie/components/propertyDialog/boolean_field.dart';
 import 'package:flutter_homie/components/propertyDialog/color_field.dart';
 import 'package:flutter_homie/components/propertyDialog/const.dart';
 import 'package:flutter_homie/components/propertyDialog/num_field.dart';
 import 'package:flutter_homie/components/propertyDialog/string_field.dart';
-import 'package:flutter_homie/homie/property/bloc/bloc.dart';
+import 'package:flutter_homie/homie/property/bloc/property_value.dart';
 import 'package:flutter_homie/homie/property/property_model.dart';
-import 'package:progress_state_button/iconed_button.dart';
-import 'package:progress_state_button/progress_button.dart';
 
 class EditPropertyDialog extends StatelessWidget {
   final PropertyModel propertyModel;
@@ -73,8 +69,8 @@ class EditPropertyDialog extends StatelessWidget {
                         onPressed: () {
                           var _fbKey = propertyValueBloc.formKey;
                           if (_fbKey.currentState.saveAndValidate()) {
-                            propertyValueBloc.add(PropertyValueUpdated(
-                                propertyModel: propertyModel, newValue: _fbKey.currentState.value['newValue']));
+                            propertyValueBloc.add(
+                                PropertyValueEvent.updated(model: propertyModel, cmd: _fbKey.currentState.value['newValue']));
                             Navigator.of(context).pop();
                           }
                         },

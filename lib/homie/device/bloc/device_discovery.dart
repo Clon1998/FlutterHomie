@@ -7,8 +7,6 @@ import 'package:flutter_homie/exception/homie_exception.dart';
 import 'package:flutter_homie/homie/device/device_discover_model.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import 'bloc.dart';
-
 part 'device_discovery.freezed.dart';
 
 @freezed

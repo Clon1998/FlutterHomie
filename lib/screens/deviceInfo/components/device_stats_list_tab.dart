@@ -10,23 +10,20 @@ class DeviceStatsListTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<DeviceInfoBloc, DeviceInfoState>(
       builder: (context, deviceBlocState) {
-        if (deviceBlocState is DeviceInfoLoading) {
-          return Column(children: [Container(child: LinearProgressIndicator())]);
-        }
-        if (deviceBlocState is DeviceInfoResult) {
-          return Container(
-            child: ListView.builder(
-              itemCount: deviceBlocState.deviceModel.stats.length,
-              itemBuilder: (context, index) {
-                return StatInfoWidget(
-                  statId: deviceBlocState.deviceModel.stats[index],
-                  deviceId: deviceBlocState.deviceModel.deviceId,
-                );
-              },
-            ),
-          );
-        }
-        return Container();
+        return deviceBlocState.maybeWhen(
+            orElse: () => Container(),
+            loading: () => Column(children: [Container(child: LinearProgressIndicator())]),
+            result: (deviceModel, deviceState) => Container(
+                  child: ListView.builder(
+                    itemCount: deviceModel.stats.length,
+                    itemBuilder: (context, index) {
+                      return StatInfoWidget(
+                        statId: deviceModel.stats[index],
+                        deviceId: deviceModel.deviceId,
+                      );
+                    },
+                  ),
+                ));
       },
     );
   }

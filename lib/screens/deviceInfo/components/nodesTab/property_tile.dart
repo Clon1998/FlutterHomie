@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_homie/components/propertyDialog/edit_property_dialog.dart';
 import 'package:flutter_homie/components/snack_bar_helpers.dart';
+import 'package:flutter_homie/exception/homie_exception.dart';
 import 'package:flutter_homie/homie/device/device_discover_model.dart';
-import 'package:flutter_homie/homie/property/bloc/bloc.dart';
+import 'package:flutter_homie/homie/property/bloc/property_optional_attribute_bloc.dart';
+import 'package:flutter_homie/homie/property/bloc/property_value.dart';
 import 'package:flutter_homie/homie/property/property_datatype_extension.dart';
 import 'package:flutter_homie/homie/property/property_model.dart';
 import 'package:progress_indicators/progress_indicators.dart';
@@ -19,13 +21,17 @@ class PropertyTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider<PropertyValueBloc>(
-      create: (BuildContext context) => PropertyValueBloc()..add(PropertyValueOpened(propertyModel: propertyModel)),
+      create: (BuildContext context) =>
+      PropertyValueBloc()
+        ..add(PropertyValueEvent.opened(propertyModel)),
       child: Padding(
         padding: EdgeInsets.fromLTRB(3.0, 0.0, 3.0, 10.0),
         child: Container(
           decoration: BoxDecoration(
             border: Border(
-              top: BorderSide(color: Theme.of(context).primaryColorDark, width: 5.0, style: BorderStyle.solid),
+              top: BorderSide(color: Theme
+                  .of(context)
+                  .primaryColorDark, width: 5.0, style: BorderStyle.solid),
             ),
             color: Colors.white,
 //            boxShadow: [
@@ -63,36 +69,39 @@ class PropertyTile extends StatelessWidget {
                       ),
                       BlocConsumer<PropertyValueBloc, PropertyValueState>(
                         listenWhen: (previous, current) {
-                          return previous is PropertyValueUpdateRequest && current is PropertyValueCurrent;
+                          return current is PropertyValueStateCurrent && previous is PropertyValueStateCmd;
                         },
                         listener: (context, state) {
-                          if (state is PropertyValueCurrent) {
-                            SnackBarHelpers.showSuccessSnackBar(context, 'Send command to property ${propertyModel.name} with value: "${state.setValue}"');
-
-                          }
+                          state.maybeWhen(
+                              orElse: () => {},
+                              current: (String value, String setValue) =>
+                                  SnackBarHelpers.showSuccessSnackBar(
+                                      context, 'Send command to property ${propertyModel.name} with value: "$setValue"'),
+                              failure: (HomieException e) =>
+                                  SnackBarHelpers.showErrorSnackBar(context, e.toString(), title: 'Error sending Command')
+                          );
                         },
-                        buildWhen: (previous, current) {
-                          return !(current is PropertyValueUpdateRequest);
-                        },
+                        buildWhen: (previous, current) => !(current is PropertyValueStateCmd),
                         builder: (context, valueState) {
-                          if (valueState is PropertyValueLoading) return FadingText('Value is beeing fetched...');
+                          return valueState.maybeWhen(
+                              orElse: () => Container(),
+                              loading: () => FadingText('Value is beeing fetched...'),
+                              current: (value, setValue) {
+                                List<Widget> list = List();
+                                if (propertyModel.retained) list.add(Text('Value: $value'));
 
-                          if (valueState is PropertyValueCurrent) {
-                            List<Widget> list = List();
-                            if (propertyModel.retained) list.add(Text('Value: ${valueState.value}'));
+                                if (propertyModel.settable) list.add(Text('Set-Value: $setValue'));
 
-                            if (propertyModel.settable) list.add(Text('Set-Value: ${valueState.setValue}'));
-
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: list,
-                            );
-                          }
-                          return Text('TO BE IMPLEMENTED');
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: list,
+                                );
+                              });
                         },
                       ),
                       Text(
-                        'Topic: ${DeviceDiscoverModel.deviceDiscoveryTopic}/${propertyModel.deviceId}/${propertyModel.nodeId}/${propertyModel.propertyId}/+',
+                        'Topic: ${DeviceDiscoverModel.deviceDiscoveryTopic}/${propertyModel.deviceId}/${propertyModel
+                            .nodeId}/${propertyModel.propertyId}/+',
                         style: const TextStyle(fontSize: 12.0),
                       ),
                       Text(
@@ -105,27 +114,26 @@ class PropertyTile extends StatelessWidget {
                       ),
                       BlocProvider<PropertyOptionalAttributeBloc>(
                         create: (context) =>
-                            PropertyOptionalAttributeBloc()..add(PropertyOptionalAttributeRequested(propertyModel.unitFuture)),
+                        PropertyOptionalAttributeBloc()
+                          ..add(PropertyOptionalAttributeEvent.requested(propertyModel.unitFuture)),
                         child: BlocBuilder<PropertyOptionalAttributeBloc, PropertyOptionalAttributeState>(
                           builder: (context, attState) {
-                            if (attState is PropertyOptionalAttributeFound) {
-                              return Text('Unit: ${attState.attValue}', style: const TextStyle(fontSize: 12.0));
-                            }
-
-                            return Container();
+                            return attState.maybeWhen(
+                                orElse: () => Container(),
+                                found: (attributeValue) => Text('Unit: $attributeValue', style: const TextStyle(fontSize: 12.0)));
                           },
                         ),
                       ),
                       BlocProvider<PropertyOptionalAttributeBloc>(
                         create: (context) =>
-                            PropertyOptionalAttributeBloc()..add(PropertyOptionalAttributeRequested(propertyModel.formatFuture)),
+                        PropertyOptionalAttributeBloc()
+                          ..add(PropertyOptionalAttributeEvent.requested(propertyModel.formatFuture)),
                         child: BlocBuilder<PropertyOptionalAttributeBloc, PropertyOptionalAttributeState>(
                           builder: (context, attState) {
-                            if (attState is PropertyOptionalAttributeFound) {
-                              return Text('Format: ${attState.attValue}', style: const TextStyle(fontSize: 12.0));
-                            }
-
-                            return Container();
+                            return attState.maybeWhen(
+                                orElse: () => Container(),
+                                found: (attributeValue) =>
+                                    Text('Format: $attributeValue', style: const TextStyle(fontSize: 12.0)));
                           },
                         ),
                       ),
@@ -139,14 +147,14 @@ class PropertyTile extends StatelessWidget {
                     icon: Icon(Icons.edit),
                     onPressed: propertyModel.settable
                         ? () {
-                            PropertyValueBloc propertyValueBloc = BlocProvider.of<PropertyValueBloc>(context);
-                            showDialog(
-                                context: context,
-                                builder: (context) {
-                                  return EditPropertyDialog(
-                                      propertyModel: propertyModel, propertyValueBloc: propertyValueBloc);
-                                });
-                          }
+                      //ToDo: I dont think i need to close this Bloc here since it comes from the Context/BlocProvider
+                      PropertyValueBloc propertyValueBloc = BlocProvider.of<PropertyValueBloc>(context);
+                      showDialog(
+                          context: context,
+                          builder: (context) {
+                            return EditPropertyDialog(propertyModel: propertyModel, propertyValueBloc: propertyValueBloc);
+                          });
+                    }
                         : null,
                   );
                 },

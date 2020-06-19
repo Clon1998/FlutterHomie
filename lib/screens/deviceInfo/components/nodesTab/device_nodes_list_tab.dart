@@ -11,25 +11,22 @@ class DeviceNodesListTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<DeviceInfoBloc, DeviceInfoState>(
       builder: (context, deviceBlocState) {
-        if (deviceBlocState is DeviceInfoLoading) {
-          return Column(children: [Container(child: LinearProgressIndicator())]);
-        }
-        if (deviceBlocState is DeviceInfoResult) {
-          return CustomScrollView(
-            slivers: <Widget>[
-              SliverList(
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  return SilverWrapper(
-                    child: NodeCard(
-                      nodeModel: deviceBlocState.deviceModel.nodeModels[index],
-                    ),
-                  );
-                }, childCount: deviceBlocState.deviceModel.nodes.length),
-              )
-            ],
-          );
-        }
-        return Container();
+        return deviceBlocState.maybeWhen(
+            orElse: () => Container(),
+            loading: () => Column(children: [Container(child: LinearProgressIndicator())]),
+            result: (deviceModel, deviceState) => CustomScrollView(
+                  slivers: <Widget>[
+                    SliverList(
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        return SilverWrapper(
+                          child: NodeCard(
+                            nodeModel: deviceModel.nodeModels[index],
+                          ),
+                        );
+                      }, childCount: deviceModel.nodes.length),
+                    )
+                  ],
+                ));
       },
     );
   }

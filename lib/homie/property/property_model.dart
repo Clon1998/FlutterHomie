@@ -33,7 +33,8 @@ class PropertyModel extends Equatable {
       : _formatWrapped = _Wrapper(format),
         _unitWrapped = _Wrapper(unit);
 
-  Either<HomieException, String> get format => _formatWrapped.latestValue;
+  // ToDo: Validate that the Exception was handled somewhere earlier!
+  String get format => _formatWrapped.latestValue?.fold((HomieException e) => null, (r) => r);
 
   Future<Either<HomieException, String>> get formatFuture => _formatWrapped._future;
 
