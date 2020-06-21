@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_homie/bloc/homie_connection.dart';
+import 'package:flutter_homie/components/snack_bar_helpers.dart';
+import 'package:flutter_homie/dependency_injection.dart';
 import 'package:flutter_homie/homie/device/bloc/bloc.dart';
 import 'package:flutter_homie/homie/device/device_discover_model.dart';
 import 'package:flutter_homie/homie/device/device_state_extension.dart';
@@ -66,14 +69,17 @@ class _DeviceGridTileState extends State<DeviceGridTile> {
                 ),
               ),
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => DeviceInfoScreen(
-                            deviceDiscoverModel: widget.deviceDiscoverModel,
-                            deviceStateBloc: _deviceStateBloc,
-                          )),
-                );
+                var connectionState = getIt<HomieConnectionBloc>()?.state;
+                connectionState.maybeWhen(
+                    orElse: () => SnackBarHelpers.showErrorSnackBar(context, 'Unable to retrieve info, disconnected', title: 'Server Status'),
+                    active: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => DeviceInfoScreen(
+                                    deviceDiscoverModel: widget.deviceDiscoverModel,
+                                    deviceStateBloc: _deviceStateBloc,
+                                  )),
+                        ));
               },
             );
           }

@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
+import 'package:flutter_homie/bloc/homie_connection.dart';
+import 'package:flutter_homie/data/homie_data_provider.dart';
 import 'package:flutter_homie/data/mqtt_data_provider.dart';
 import 'package:flutter_homie/dependency_injection.dart';
 import 'package:flutter_homie/exception/homie_exception.dart';
@@ -32,12 +34,16 @@ abstract class DeviceDiscoveryEvent with _$DeviceDiscoveryEvent {
 }
 
 class DiscoverDeviceBloc extends Bloc<DeviceDiscoveryEvent, DeviceDiscoveryState> {
-  DiscoverDeviceBloc([MqttDataProvider mqttDataProvider]) : _mqttDataProvider = mqttDataProvider ?? getIt<MqttDataProvider>();
+  DiscoverDeviceBloc([HomieDataProvider mqttDataProvider]) : _mqttDataProvider = mqttDataProvider ?? getIt<MqttDataProvider>() {
+    getIt<HomieConnectionBloc>().listen((state) {
+      state.maybeWhen(orElse: () => {}, disconnected: () => {add(DeviceDiscoveryEvent.stopped())});
+    });
+  }
 
   @override
   DeviceDiscoveryState get initialState => DeviceDiscoveryState.initial();
 
-  final MqttDataProvider _mqttDataProvider;
+  final HomieDataProvider _mqttDataProvider;
 
   StreamSubscription _subscription;
 

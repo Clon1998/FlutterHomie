@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
+import 'package:flutter_homie/data/homie_data_provider.dart';
 import 'package:flutter_homie/data/mqtt_data_provider.dart';
 import 'package:flutter_homie/dependency_injection.dart';
 import 'package:flutter_homie/homie/device/device_model.dart';
@@ -24,10 +25,10 @@ abstract class DeviceConnectionStateEvent with _$DeviceConnectionStateEvent {
 }
 
 class DeviceConnectionStateBloc extends Bloc<DeviceConnectionStateEvent, DeviceConnectionState> {
-  DeviceConnectionStateBloc([MqttDataProvider mqttDataProvider])
+  DeviceConnectionStateBloc([HomieDataProvider mqttDataProvider])
       : _mqttDataProvider = mqttDataProvider ?? getIt<MqttDataProvider>();
 
-  final MqttDataProvider _mqttDataProvider;
+  final HomieDataProvider _mqttDataProvider;
 
   @override
   DeviceConnectionState get initialState => DeviceConnectionState.initial();

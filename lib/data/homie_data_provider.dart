@@ -1,10 +1,12 @@
 import 'package:dartz/dartz.dart';
+import 'package:flutter_homie/data/model/settings_model.dart';
 import 'package:flutter_homie/exception/homie_exception.dart';
 import 'package:flutter_homie/homie/device/device_discover_model.dart';
 import 'package:flutter_homie/homie/device/device_model.dart';
 import 'package:flutter_homie/homie/node/node_model.dart';
 import 'package:flutter_homie/homie/property/property_model.dart';
 import 'package:flutter_homie/homie/stat/stat_model.dart';
+import 'package:mqtt_client/mqtt_client.dart';
 import 'package:rxdart/subjects.dart';
 
 abstract class HomieDataProvider {
@@ -33,4 +35,9 @@ abstract class HomieDataProvider {
   Future<Either<HomieException, PropertyModel>> getPropertyModel(String deviceId, String nodeId, String propertyId);
 
   void setPropertyValue({String deviceId, String nodeId, String propertyId, PropertyModel propertyModel, String value});
+
+  //ToDo: Decide if this is a good idea or not....
+  void onDisconnect(void callback(MqttClientConnectionStatus status));
+
+  Future<Either<HomieException, MqttClientConnectionStatus>> tryConnect(SettingsModel settingsModel);
 }

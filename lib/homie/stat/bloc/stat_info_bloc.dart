@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
+import 'package:flutter_homie/data/homie_data_provider.dart';
 import 'package:flutter_homie/data/mqtt_data_provider.dart';
 import 'package:flutter_homie/dependency_injection.dart';
 import 'package:flutter_homie/exception/homie_exception.dart';
@@ -28,9 +29,9 @@ abstract class StatInfoEvent with _$StatInfoEvent {
 }
 
 class StatInfoBloc extends Bloc<StatInfoEvent, StatInfoState> {
-  final MqttDataProvider _mqttDataProvider;
+  final HomieDataProvider _mqttDataProvider;
 
-  StatInfoBloc([MqttDataProvider mqttDataProvider]) : _mqttDataProvider = mqttDataProvider ?? getIt<MqttDataProvider>();
+  StatInfoBloc([HomieDataProvider mqttDataProvider]) : _mqttDataProvider = mqttDataProvider ?? getIt<MqttDataProvider>();
 
   StreamSubscription<StatModel> statValueSub;
 

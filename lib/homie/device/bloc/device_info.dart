@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_homie/data/homie_data_provider.dart';
 import 'package:flutter_homie/data/mqtt_data_provider.dart';
 import 'package:flutter_homie/dependency_injection.dart';
 import 'package:flutter_homie/exception/homie_exception.dart';
@@ -31,12 +32,12 @@ abstract class DeviceInfoEvent with _$DeviceInfoEvent {
 
 class DeviceInfoBloc extends Bloc<DeviceInfoEvent, DeviceInfoState> {
   final DeviceConnectionStateBloc _deviceStateBloc;
-  final MqttDataProvider _mqttDataProvider;
+  final HomieDataProvider _mqttDataProvider;
 
   StreamSubscription<DeviceConnectionState> stateStreamSubscription;
   HomieDeviceState _deviceStateCurrent = HomieDeviceState.alert;
 
-  DeviceInfoBloc(this._deviceStateBloc, [MqttDataProvider mqttDataProvider])
+  DeviceInfoBloc(this._deviceStateBloc, [HomieDataProvider mqttDataProvider])
       : _mqttDataProvider = mqttDataProvider ?? getIt<MqttDataProvider>() {
     stateStreamSubscription = _deviceStateBloc.listen((state) {
       if (state is DeviceConnectionStateCurrente) {

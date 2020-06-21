@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:flutter_homie/data/homie_data_provider.dart';
 import 'package:flutter_homie/data/mqtt_data_provider.dart';
 import 'package:flutter_homie/dependency_injection.dart';
 import 'package:flutter_homie/exception/homie_exception.dart';
@@ -37,10 +38,10 @@ abstract class PropertyValueEvent with _$PropertyValueEvent {
 }
 
 class PropertyValueBloc extends Bloc<PropertyValueEvent, PropertyValueState> {
-  final MqttDataProvider _mqttDataProvider;
+  final HomieDataProvider _mqttDataProvider;
   final GlobalKey<FormBuilderState> formKey = GlobalKey<FormBuilderState>();
 
-  PropertyValueBloc([MqttDataProvider mqttDataProvider]) : _mqttDataProvider = mqttDataProvider ?? getIt<MqttDataProvider>();
+  PropertyValueBloc([HomieDataProvider mqttDataProvider]) : _mqttDataProvider = mqttDataProvider ?? getIt<MqttDataProvider>();
 
   String _expected = '0';
   String _actual = '0';

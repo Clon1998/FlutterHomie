@@ -356,8 +356,7 @@ class MqttDataProvider implements HomieDataProvider {
   void _onDisconnected() {
     print('[MQTT client] _onDisconnected');
     print('[MQTT client] MQTT client disconnected');
-
-    listOfCb.forEach((cb) => cb());
+    listOfCb.forEach((cb) => cb(client.connectionStatus));
 
 //    dynamicFilterMap.values.forEach((element) async {
 //      await element.updates.drain();
@@ -370,7 +369,7 @@ class MqttDataProvider implements HomieDataProvider {
 //    behaviorSubject?.close();
   }
 
-  void onDisconnect(void callback()) {
+  void onDisconnect(void callback(MqttClientConnectionStatus status)) {
     listOfCb.add(callback);
   }
 

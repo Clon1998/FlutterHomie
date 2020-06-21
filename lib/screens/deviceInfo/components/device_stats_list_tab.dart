@@ -12,7 +12,6 @@ class DeviceStatsListTab extends StatelessWidget {
       builder: (context, deviceBlocState) {
         return deviceBlocState.maybeWhen(
             orElse: () => Container(),
-            loading: () => Column(children: [Container(child: LinearProgressIndicator())]),
             result: (deviceModel, deviceState) => Container(
                   child: ListView.builder(
                     itemCount: deviceModel.stats.length,

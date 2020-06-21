@@ -31,15 +31,34 @@ class DeviceDiscoveryScreen extends StatelessWidget {
                 // the App.build method, and use it to set our appbar title.
                 title: Text('Device Discovery'),
                 actions: <Widget>[
-                  Icon(
-                    Icons.brightness_1,
-                    size: 12,
-                    color: connectionState.when(
-                        disconnected: () => Colors.red,
-                        initial: () => Colors.lightBlueAccent,
-                        loading: () => Colors.yellow,
-                        failure: (e) => Colors.red,
-                        active: () => Colors.lightGreen),
+                  IconButton(
+                    icon: Icon(
+                      Icons.brightness_1,
+                      size: 12,
+                      color: connectionState.when(
+                          disconnected: () => Colors.red,
+                          initial: () => Colors.lightBlueAccent,
+                          loading: () => Colors.yellow,
+                          failure: (e) => Colors.red,
+                          active: () => Colors.lightGreen),
+                    ),
+                    onPressed: () {
+                      connectionState.maybeWhen(
+                          orElse: () {},
+                          disconnected: () {
+                            var mqttSettingsState = getIt<MqttSettingsBloc>().state;
+                            if (mqttSettingsState is MqttSettingsStateAvailable)
+                              getIt<HomieConnectionBloc>().add(HomieConnectionEvent.open(mqttSettingsState.settingsModel));
+                          },
+                          failure: (e) => SnackBarHelpers.showErrorSnackBar(context, e.toString(), title: 'Connection Error'));
+                    },
+                    tooltip: connectionState.maybeWhen(
+                        orElse: () => null,
+                        initial: () => 'Connection init',
+                        loading: () => 'Connection loading',
+                        disconnected: () => 'Connection closed',
+                        failure: (e) => 'Connection error',
+                        active: () => 'Connection is active'),
                   ),
                   IconButton(
                     icon: Icon(Icons.settings),
@@ -65,6 +84,7 @@ class DeviceDiscoveryScreen extends StatelessWidget {
                   children: <Widget>[
                     connectionState.maybeWhen(
                       orElse: () => Container(),
+                      initial: () => Text('Please set MQTT Server in Settings'),
                       active: () => Text('Mqtt connection established', style: TextStyle(color: Colors.lightGreen)),
                       loading: () => Text('Trying to connect'),
                       failure: (e) => Text('Error opening Mqtt connection', style: TextStyle(color: Colors.deepOrangeAccent)),
@@ -106,12 +126,13 @@ class DeviceDiscoveryScreen extends StatelessWidget {
                     BlocBuilder<DiscoverDeviceBloc, DeviceDiscoveryState>(
                       builder: (context, state) {
                         return state.maybeWhen(
-                            orElse: () => Text('Please start Device Discovery'),
-                            loading: () => LoadingIndicator(
-                                  indicatorType: Indicator.pacman,
-                                ),
-                            active: buildGridView,
-                            stop: buildGridView,);
+                          orElse: () => Text('Please start Device Discovery'),
+                          loading: () => LoadingIndicator(
+                            indicatorType: Indicator.pacman,
+                          ),
+                          active: buildGridView,
+                          stop: buildGridView,
+                        );
                       },
                     )
                   ],

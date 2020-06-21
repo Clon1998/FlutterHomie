@@ -21,19 +21,15 @@ class PropertyTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider<PropertyValueBloc>(
-      create: (BuildContext context) =>
-      PropertyValueBloc()
-        ..add(PropertyValueEvent.opened(propertyModel)),
+      create: (BuildContext context) => PropertyValueBloc()..add(PropertyValueEvent.opened(propertyModel)),
       child: Padding(
         padding: EdgeInsets.fromLTRB(3.0, 0.0, 3.0, 10.0),
         child: Container(
           decoration: BoxDecoration(
             border: Border(
-              top: BorderSide(color: Theme
-                  .of(context)
-                  .primaryColorDark, width: 5.0, style: BorderStyle.solid),
+              top: BorderSide(color: Theme.of(context).primaryColorDark, width: 5.0, style: BorderStyle.solid),
             ),
-            color: Colors.white,
+            color: Theme.of(context).backgroundColor,
 //            boxShadow: [
 //              BoxShadow(
 //                color: Colors.black,
@@ -74,12 +70,10 @@ class PropertyTile extends StatelessWidget {
                         listener: (context, state) {
                           state.maybeWhen(
                               orElse: () => {},
-                              current: (String value, String setValue) =>
-                                  SnackBarHelpers.showSuccessSnackBar(
-                                      context, 'Send command to property ${propertyModel.name} with value: "$setValue"'),
+                              current: (String value, String setValue) => SnackBarHelpers.showSuccessSnackBar(
+                                  context, 'Send command to property ${propertyModel.name} with value: "$setValue"'),
                               failure: (HomieException e) =>
-                                  SnackBarHelpers.showErrorSnackBar(context, e.toString(), title: 'Error sending Command')
-                          );
+                                  SnackBarHelpers.showErrorSnackBar(context, e.toString(), title: 'Error sending Command'));
                         },
                         buildWhen: (previous, current) => !(current is PropertyValueStateCmd),
                         builder: (context, valueState) {
@@ -100,8 +94,7 @@ class PropertyTile extends StatelessWidget {
                         },
                       ),
                       Text(
-                        'Topic: ${DeviceDiscoverModel.deviceDiscoveryTopic}/${propertyModel.deviceId}/${propertyModel
-                            .nodeId}/${propertyModel.propertyId}/+',
+                        'Topic: ${DeviceDiscoverModel.deviceDiscoveryTopic}/${propertyModel.deviceId}/${propertyModel.nodeId}/${propertyModel.propertyId}/+',
                         style: const TextStyle(fontSize: 12.0),
                       ),
                       Text(
@@ -113,8 +106,7 @@ class PropertyTile extends StatelessWidget {
                         style: const TextStyle(fontSize: 12.0),
                       ),
                       BlocProvider<PropertyOptionalAttributeBloc>(
-                        create: (context) =>
-                        PropertyOptionalAttributeBloc()
+                        create: (context) => PropertyOptionalAttributeBloc()
                           ..add(PropertyOptionalAttributeEvent.requested(propertyModel.unitFuture)),
                         child: BlocBuilder<PropertyOptionalAttributeBloc, PropertyOptionalAttributeState>(
                           builder: (context, attState) {
@@ -125,8 +117,7 @@ class PropertyTile extends StatelessWidget {
                         ),
                       ),
                       BlocProvider<PropertyOptionalAttributeBloc>(
-                        create: (context) =>
-                        PropertyOptionalAttributeBloc()
+                        create: (context) => PropertyOptionalAttributeBloc()
                           ..add(PropertyOptionalAttributeEvent.requested(propertyModel.formatFuture)),
                         child: BlocBuilder<PropertyOptionalAttributeBloc, PropertyOptionalAttributeState>(
                           builder: (context, attState) {
@@ -147,14 +138,14 @@ class PropertyTile extends StatelessWidget {
                     icon: Icon(Icons.edit),
                     onPressed: propertyModel.settable
                         ? () {
-                      //ToDo: I dont think i need to close this Bloc here since it comes from the Context/BlocProvider
-                      PropertyValueBloc propertyValueBloc = BlocProvider.of<PropertyValueBloc>(context);
-                      showDialog(
-                          context: context,
-                          builder: (context) {
-                            return EditPropertyDialog(propertyModel: propertyModel, propertyValueBloc: propertyValueBloc);
-                          });
-                    }
+                            //ToDo: I dont think i need to close this Bloc here since it comes from the Context/BlocProvider
+                            PropertyValueBloc propertyValueBloc = BlocProvider.of<PropertyValueBloc>(context);
+                            showDialog(
+                                context: context,
+                                builder: (context) {
+                                  return EditPropertyDialog(propertyModel: propertyModel, propertyValueBloc: propertyValueBloc);
+                                });
+                          }
                         : null,
                   );
                 },

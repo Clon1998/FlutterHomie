@@ -13,7 +13,6 @@ class DeviceNodesListTab extends StatelessWidget {
       builder: (context, deviceBlocState) {
         return deviceBlocState.maybeWhen(
             orElse: () => Container(),
-            loading: () => Column(children: [Container(child: LinearProgressIndicator())]),
             result: (deviceModel, deviceState) => CustomScrollView(
                   slivers: <Widget>[
                     SliverList(

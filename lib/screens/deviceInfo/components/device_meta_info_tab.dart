@@ -18,7 +18,6 @@ class DeviceMetaInfoTab extends StatelessWidget {
           builder: (context, deviceBlocState) {
             return deviceBlocState.maybeWhen(
                 orElse: () => Container(),
-                loading: () => LinearProgressIndicator(),
                 result: (deviceModel, deviceState) => Card(
                         child: Padding(
                       padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
