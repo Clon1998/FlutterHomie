@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_homie/homie/device/device_discover_model.dart';
 import 'package:flutter_homie/homie/node/node_model.dart';
-import 'package:flutter_homie/screens/deviceInfo/components/nodesTab/property_tile.dart';
+import 'package:flutter_homie/presentation/screen/deviceInfo/components/nodesTab/property_tile.dart';
 
 class NodeCard extends StatelessWidget {
   const NodeCard({

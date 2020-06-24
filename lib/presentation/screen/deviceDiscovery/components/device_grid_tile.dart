@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_homie/bloc/homie_connection.dart';
-import 'package:flutter_homie/components/snack_bar_helpers.dart';
+import 'package:flutter_homie/presentation/components/snack_bar_helpers.dart';
 import 'package:flutter_homie/dependency_injection.dart';
 import 'package:flutter_homie/homie/device/bloc/bloc.dart';
 import 'package:flutter_homie/homie/device/device_discover_model.dart';
 import 'package:flutter_homie/homie/device/device_state_extension.dart';
-import 'package:flutter_homie/screens/deviceInfo/device_info_screen.dart';
+import 'package:flutter_homie/presentation/router.dart';
+import 'package:flutter_homie/presentation/screen/deviceInfo/device_info_screen.dart';
 import 'package:loading_indicator/loading_indicator.dart';
 
 class DeviceGridTile extends StatefulWidget {
@@ -72,14 +73,9 @@ class _DeviceGridTileState extends State<DeviceGridTile> {
                 var connectionState = getIt<HomieConnectionBloc>()?.state;
                 connectionState.maybeWhen(
                     orElse: () => SnackBarHelpers.showErrorSnackBar(context, 'Unable to retrieve info, disconnected', title: 'Server Status'),
-                    active: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => DeviceInfoScreen(
-                                    deviceDiscoverModel: widget.deviceDiscoverModel,
-                                    deviceStateBloc: _deviceStateBloc,
-                                  )),
-                        ));
+                    active: () {
+                      Navigator.pushNamed(context, Router.DEVICE_INFO, arguments: DeviceInfoScreenArguments(widget.deviceDiscoverModel, _deviceStateBloc));
+                    });
               },
             );
           }

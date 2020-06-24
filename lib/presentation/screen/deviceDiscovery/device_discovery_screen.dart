@@ -3,12 +3,12 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_homie/bloc/homie_connection.dart';
 import 'package:flutter_homie/bloc/mqtt_setting.dart';
-import 'package:flutter_homie/components/snack_bar_helpers.dart';
 import 'package:flutter_homie/dependency_injection.dart';
 import 'package:flutter_homie/exception/homie_exception.dart';
 import 'package:flutter_homie/homie/device/bloc/bloc.dart';
 import 'package:flutter_homie/homie/device/device_discover_model.dart';
-import 'package:flutter_homie/screens/mqttSettings/mqtt_settings_screen.dart';
+import 'package:flutter_homie/presentation/components/snack_bar_helpers.dart';
+import 'package:flutter_homie/presentation/router.dart';
 import 'package:loading_indicator/loading_indicator.dart';
 
 import 'components/device_grid_tile.dart';
@@ -63,10 +63,7 @@ class DeviceDiscoveryScreen extends StatelessWidget {
                   IconButton(
                     icon: Icon(Icons.settings),
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => MqttSettingsScreen()),
-                      );
+                      Navigator.pushNamed(context, Router.SETTINGS);
                     },
                     tooltip: 'Settings',
                   ),

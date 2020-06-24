@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_homie/components/propertyDialog/edit_property_dialog.dart';
-import 'package:flutter_homie/components/snack_bar_helpers.dart';
+import 'package:flutter_homie/presentation/components/propertyDialog/edit_property_dialog.dart';
+import 'package:flutter_homie/presentation/components/snack_bar_helpers.dart';
 import 'package:flutter_homie/exception/homie_exception.dart';
 import 'package:flutter_homie/homie/device/device_discover_model.dart';
 import 'package:flutter_homie/homie/property/bloc/property_optional_attribute_bloc.dart';

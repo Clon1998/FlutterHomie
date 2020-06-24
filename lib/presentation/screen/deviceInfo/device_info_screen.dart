@@ -1,16 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_homie/components/snack_bar_helpers.dart';
+import 'package:flutter_homie/presentation/components/snack_bar_helpers.dart';
 import 'package:flutter_homie/exception/homie_exception.dart';
 import 'package:flutter_homie/homie/device/bloc/bloc.dart';
 import 'package:flutter_homie/homie/device/bloc/device_info.dart';
 import 'package:flutter_homie/homie/device/device_discover_model.dart';
-import 'package:flutter_homie/screens/deviceInfo/components/device_stats_list_tab.dart';
-import 'package:flutter_homie/screens/deviceInfo/components/nodesTab/device_nodes_list_tab.dart';
+import 'package:flutter_homie/presentation/screen/deviceInfo/components/device_stats_list_tab.dart';
+import 'package:flutter_homie/presentation/screen/deviceInfo/components/nodesTab/device_nodes_list_tab.dart';
 import 'package:loading_indicator/loading_indicator.dart';
 
 import 'components/device_meta_info_tab.dart';
+
+
+class DeviceInfoScreenArguments {
+  final DeviceDiscoverModel deviceDiscoverModel;
+  final DeviceConnectionStateBloc deviceStateBloc;
+
+  DeviceInfoScreenArguments(this.deviceDiscoverModel, this.deviceStateBloc);
+}
 
 class DeviceInfoScreen extends StatelessWidget {
   //ToDo: Instead use GetIt to make this a singleton

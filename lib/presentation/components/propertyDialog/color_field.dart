@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
-import 'package:flutter_homie/components/propertyDialog/string_field.dart';
+import 'package:flutter_homie/presentation/components/propertyDialog/string_field.dart';
 import 'package:flutter_homie/homie/property/property_model.dart';
 
 class ColorField extends StatelessWidget {

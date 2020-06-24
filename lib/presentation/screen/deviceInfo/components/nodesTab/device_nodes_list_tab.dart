@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_homie/components/silver_keep_alive.dart';
+import 'package:flutter_homie/presentation/components/silver_keep_alive.dart';
 import 'package:flutter_homie/homie/device/bloc/bloc.dart';
-import 'package:flutter_homie/screens/deviceInfo/components/nodesTab/node_card.dart';
+import 'package:flutter_homie/presentation/screen/deviceInfo/components/nodesTab/node_card.dart';
 
 class DeviceNodesListTab extends StatelessWidget {
   DeviceNodesListTab();

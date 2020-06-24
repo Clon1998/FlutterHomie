@@ -4,8 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_homie/bloc/mqtt_setting.dart';
 import 'package:flutter_homie/data/model/settings_model.dart';
+import 'package:flutter_homie/dependency_injection.dart';
 
-import '../../dependency_injection.dart';
 
 const InputDecoration _decoration = InputDecoration(
   border: const OutlineInputBorder(),

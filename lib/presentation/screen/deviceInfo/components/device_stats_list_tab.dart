@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_homie/homie/device/bloc/bloc.dart';
-import 'package:flutter_homie/screens/deviceInfo/components/stat_info_widget.dart';
+import 'package:flutter_homie/presentation/screen/deviceInfo/components/stat_info_widget.dart';
 
 class DeviceStatsListTab extends StatelessWidget {
   DeviceStatsListTab();

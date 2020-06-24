@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
-import 'package:flutter_homie/components/propertyDialog/boolean_field.dart';
-import 'package:flutter_homie/components/propertyDialog/color_field.dart';
-import 'package:flutter_homie/components/propertyDialog/const.dart';
-import 'package:flutter_homie/components/propertyDialog/num_field.dart';
-import 'package:flutter_homie/components/propertyDialog/string_field.dart';
+import 'package:flutter_homie/presentation/components/propertyDialog/boolean_field.dart';
+import 'package:flutter_homie/presentation/components/propertyDialog/color_field.dart';
+import 'package:flutter_homie/presentation/components/propertyDialog/const.dart';
+import 'package:flutter_homie/presentation/components/propertyDialog/num_field.dart';
+import 'package:flutter_homie/presentation/components/propertyDialog/string_field.dart';
 import 'package:flutter_homie/homie/property/bloc/property_value.dart';
 import 'package:flutter_homie/homie/property/property_model.dart';
 
