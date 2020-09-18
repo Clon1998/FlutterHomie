@@ -11,8 +11,8 @@ class PropertyModel extends Equatable {
   final String propertyId;
   final String name;
   final PropertyDataType datatype;
-  final bool settable;
-  final bool retained;
+  final _Wrapper<bool> _settableWrapped;
+  final _Wrapper<bool> _retainedWrapped;
   final _Wrapper<String> _formatWrapped;
   final _Wrapper<String> _unitWrapped;
   final BehaviorSubject<String> currentValue;
@@ -24,14 +24,20 @@ class PropertyModel extends Equatable {
       this.propertyId,
       this.name,
       this.datatype,
-      this.settable,
-      this.retained,
+      Future<Either<HomieException, bool>> settable,
+      Future<Either<HomieException, bool>> retained,
       Future<Either<HomieException, String>> format,
       Future<Either<HomieException, String>> unit,
       this.currentValue,
       this.expectedValue})
-      : _formatWrapped = _Wrapper(format),
+      : _settableWrapped = _Wrapper(settable),
+        _retainedWrapped = _Wrapper(retained),
+        _formatWrapped = _Wrapper(format),
         _unitWrapped = _Wrapper(unit);
+
+  bool get settable => _settableWrapped.latestValue?.fold((HomieException e) => null, (r) => r) ?? false;
+
+  bool get retained => _retainedWrapped.latestValue?.fold((HomieException e) => null, (r) => r) ?? true;
 
   // ToDo: Validate that the Exception was handled somewhere earlier!
   String get format => _formatWrapped.latestValue?.fold((HomieException e) => null, (r) => r);
@@ -43,8 +49,19 @@ class PropertyModel extends Equatable {
   Future<Either<HomieException, String>> get unitFuture => _unitWrapped._future;
 
   @override
-  List<Object> get props =>
-      [deviceId, nodeId, propertyId, name, datatype, settable, retained, unit, format, currentValue, expectedValue];
+  List<Object> get props => [
+        deviceId,
+        nodeId,
+        propertyId,
+        name,
+        datatype,
+        _settableWrapped,
+        _retainedWrapped,
+        _unitWrapped,
+        _formatWrapped,
+        currentValue,
+        expectedValue
+      ];
 }
 
 class _Wrapper<T> {

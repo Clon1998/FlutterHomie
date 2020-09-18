@@ -252,11 +252,15 @@ class MqttDataProvider implements HomieDataProvider {
     //ToDO: This is horrible, to do it like this! Since some Attr are optional!
     var nameF = getPropertyAttribute(deviceId, nodeId, propertyId, '\$name');
     var datatypeF = getPropertyAttribute(deviceId, nodeId, propertyId, '\$datatype');
-    var settableF = getPropertyAttribute(deviceId, nodeId, propertyId, '\$settable');
-    var retainedF = getPropertyAttribute(deviceId, nodeId, propertyId, '\$retained');
+
     var currentValueF = getPropertyValue(deviceId, nodeId, propertyId);
     var expectedValueF = getPropertyValue(deviceId, nodeId, propertyId, true);
 
+    //Optinal stuff
+    Future<Either<HomieException, bool>> settableF =
+        getPropertyAttribute(deviceId, nodeId, propertyId, '\$settable').then((value) => value.map((r) => r == 'true'));
+    Future<Either<HomieException, bool>> retainedF =
+        getPropertyAttribute(deviceId, nodeId, propertyId, '\$retained').then((value) => value.map((r) => r == 'true'));
     Future<Either<HomieException, String>> unit = getPropertyAttribute(deviceId, nodeId, propertyId, '\$unit');
     Future<Either<HomieException, String>> format = getPropertyAttribute(deviceId, nodeId, propertyId, '\$format');
     try {
@@ -267,14 +271,6 @@ class MqttDataProvider implements HomieDataProvider {
       PropertyDataType type = (await datatypeF).fold((HomieException exception) {
         throw exception;
       }, PropertyDataTypeDecorated.fromString);
-
-      bool settable = (await settableF).fold((HomieException exception) {
-        throw exception;
-      }, (value) => value == 'true');
-
-      bool retained = (await retainedF).fold((HomieException exception) {
-        throw exception;
-      }, (value) => value == 'true');
 
       Stream<String> currentValue = (await currentValueF).fold((HomieException exception) {
         throw exception;
@@ -289,8 +285,8 @@ class MqttDataProvider implements HomieDataProvider {
         propertyId: propertyId,
         name: name,
         datatype: type,
-        settable: settable,
-        retained: retained,
+        settable: settableF,
+        retained: retainedF,
         unit: unit,
         format: format,
         currentValue: currentValue,
